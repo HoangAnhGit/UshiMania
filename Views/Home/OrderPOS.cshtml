@@ -192,7 +192,7 @@
                     return;
                 }
 
-                $.getJSON('/RestaurantApi/GetOrderPOS', { maBan: tableId })
+                $.ajax({ url: `/api/restaurant/orders/table/${tableId}`, method: 'GET', dataType: 'json' })
                     .done(response => {
                         if (!response?.success) {
                             notify(response?.message || 'Could not load order.', true);
@@ -253,7 +253,7 @@
             }
 
             function loadMenu() {
-                $.getJSON('/RestaurantApi/GetDanhMucMonAn')
+                $.ajax({ url: '/api/restaurant/menu', method: 'GET', dataType: 'json' })
                     .done(response => {
                         if (!response?.success) {
                             $('#menu-grid').text(response?.message || 'Could not load menu.');
@@ -268,7 +268,7 @@
             }
 
             function loadTables() {
-                $.getJSON('/RestaurantApi/GetDanhSachBan')
+                $.ajax({ url: '/api/restaurant/tables', method: 'GET', dataType: 'json' })
                     .done(response => {
                         if (!response?.success) {
                             notify(response?.message || 'Could not load tables.', true);
@@ -311,7 +311,7 @@
                     ghiChuMon: $('#dish-note').val() || null
                 };
                 $.ajax({
-                    url: '/RestaurantApi/TaoHoacCapNhatOrder',
+                    url: '/api/restaurant/orders',
                     method: 'POST',
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json',
@@ -372,7 +372,7 @@
                     return;
                 }
                 $.ajax({
-                    url: '/RestaurantApi/ThanhToanVaTruKho',
+                    url: '/api/restaurant/payments',
                     method: 'POST',
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json',

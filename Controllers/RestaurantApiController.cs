@@ -5,7 +5,8 @@ using UshiMania.Models;
 
 namespace UshiMania.Controllers;
 
-[Route("[controller]/[action]")]
+[ApiController]
+[Route("api/restaurant")]
 public sealed class RestaurantApiController : Controller
 {
     private readonly BanAnBLL banAnBLL;
@@ -24,7 +25,7 @@ public sealed class RestaurantApiController : Controller
         this.logger = logger;
     }
 
-    [HttpGet]
+    [HttpGet("tables")]
     public IActionResult GetDanhSachBan()
     {
         try
@@ -38,7 +39,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpPost]
+    [HttpPut("tables/status")]
     public IActionResult CapNhatTrangThaiBan([FromBody] CapNhatTrangThaiBanRequest? request)
     {
         try
@@ -62,7 +63,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpPost]
+    [HttpPost("orders")]
     public IActionResult TaoHoacCapNhatOrder([FromBody] TaoHoacCapNhatOrderRequest? request)
     {
         try
@@ -138,7 +139,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpGet]
+    [HttpGet("menu")]
     public IActionResult GetDanhMucMonAn()
     {
         try
@@ -152,8 +153,8 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpGet]
-    public IActionResult GetOrderPOS([FromQuery] int maBan)
+    [HttpGet("orders/table/{maBan:int}")]
+    public IActionResult GetOrderPOS([FromRoute] int maBan)
     {
         try
         {
@@ -171,7 +172,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpGet]
+    [HttpGet("kitchen/orders")]
     public IActionResult GetDanhSachMonBep()
     {
         try
@@ -185,7 +186,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpPost]
+    [HttpPut("kitchen/items/status")]
     public IActionResult CapNhatTienDoBep([FromBody] CapNhatTienDoBepRequest? request)
     {
         try
@@ -209,7 +210,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpPost]
+    [HttpPost("payments")]
     public IActionResult ThanhToanVaTruKho([FromBody] ThanhToanVaTruKhoRequest? request)
     {
         try
@@ -238,7 +239,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpGet]
+    [HttpGet("inventory/alerts")]
     public IActionResult GetCanhBaoTonKho()
     {
         try
@@ -252,7 +253,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpGet]
+    [HttpGet("reports/revenue")]
     public IActionResult GetBaoCaoDoanhThu(
         [FromQuery] DateTime? tuNgay,
         [FromQuery] DateTime? denNgay,
@@ -269,7 +270,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpGet]
+    [HttpGet("reports/best-sellers")]
     public IActionResult GetMonBanChay([FromQuery] DateTime? tuNgay, [FromQuery] DateTime? denNgay)
     {
         try
@@ -283,7 +284,7 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
-    [HttpGet]
+    [HttpGet("reports/inventory-history")]
     public IActionResult GetLichSuTruKho([FromQuery] DateTime? tuNgay, [FromQuery] DateTime? denNgay)
     {
         try

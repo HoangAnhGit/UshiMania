@@ -98,7 +98,7 @@
             function loadKitchenOrders() {
                 if (refreshInProgress) return;
                 refreshInProgress = true;
-                $.getJSON('/RestaurantApi/GetDanhSachMonBep')
+                $.ajax({ url: '/api/restaurant/kitchen/orders', method: 'GET', dataType: 'json' })
                     .done(response => {
                         if (!response || !response.success) {
                             showMessage(response?.message || 'Kh\u00f4ng th\u1ec3 t\u1ea3i phi\u1ebfu b\u1ebfp.', true);
@@ -119,8 +119,8 @@
                 updatingIds.add(detailId);
                 renderTickets();
                 $.ajax({
-                    url: '/RestaurantApi/CapNhatTienDoBep',
-                    method: 'POST',
+                    url: '/api/restaurant/kitchen/items/status',
+                    method: 'PUT',
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json',
                     data: JSON.stringify({ maChiTiet: detailId, tienDoBep: nextStatus })

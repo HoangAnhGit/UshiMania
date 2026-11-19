@@ -154,7 +154,7 @@
 
             function loadTables() {
                 $.ajax({
-                    url: '/RestaurantApi/GetDanhSachBan',
+                    url: '/api/restaurant/tables',
                     method: 'GET',
                     dataType: 'json'
                 }).done(response => {
@@ -201,8 +201,8 @@
                 }
 
                 $.ajax({
-                    url: '/RestaurantApi/CapNhatTrangThaiBan',
-                    method: 'POST',
+                    url: '/api/restaurant/tables/status',
+                    method: 'PUT',
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json',
                     data: JSON.stringify({ maBan: selectedTableId, trangThai: $('#status-select').val() })

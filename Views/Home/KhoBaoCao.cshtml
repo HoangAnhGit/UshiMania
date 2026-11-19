@@ -86,11 +86,11 @@
 
             function loadRevenue() {
                 $('#report-results').empty().append($('<div class="report-empty">').text('\u0110ang t\u1ea3i b\u00e1o c\u00e1o doanh thu...'));
-                $.getJSON('/RestaurantApi/GetBaoCaoDoanhThu', {
+                $.ajax({ url: '/api/restaurant/reports/revenue', method: 'GET', dataType: 'json', data: {
                     tuNgay: $('#report-from').val(),
                     denNgay: $('#report-to').val(),
                     theoGio: true
-                }).done(response => {
+                }}).done(response => {
                     if (!response?.success) {
                         $('#report-results').text(response?.message || 'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c b\u00e1o c\u00e1o.');
                         return;
@@ -131,10 +131,10 @@
 
             function loadBestSellers() {
                 $('#report-results').empty().append($('<div class="report-empty">').text('\u0110ang t\u1ea3i m\u00f3n b\u00e1n ch\u1ea1y...'));
-                $.getJSON('/RestaurantApi/GetMonBanChay', {
+                $.ajax({ url: '/api/restaurant/reports/best-sellers', method: 'GET', dataType: 'json', data: {
                     tuNgay: $('#report-from').val(),
                     denNgay: $('#report-to').val()
-                }).done(response => {
+                }}).done(response => {
                     if (!response?.success) {
                         $('#report-results').text(response?.message || 'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c b\u00e1o c\u00e1o.');
                         return;
@@ -163,10 +163,10 @@
 
             function loadInventoryHistory() {
                 $('#report-results').empty().append($('<div class="report-empty">').text('\u0110ang t\u1ea3i l\u1ecbch s\u1eed kho...'));
-                $.getJSON('/RestaurantApi/GetLichSuTruKho', {
+                $.ajax({ url: '/api/restaurant/reports/inventory-history', method: 'GET', dataType: 'json', data: {
                     tuNgay: $('#report-from').val(),
                     denNgay: $('#report-to').val()
-                }).done(response => {
+                }}).done(response => {
                     if (!response?.success) {
                         $('#report-results').text(response?.message || 'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch s\u1eed kho.');
                         return;
@@ -199,7 +199,7 @@
 
             function loadInventory() {
                 $('#low-stock-list').empty().append($('<div class="report-empty">').text('\u0110ang ki\u1ec3m tra t\u1ed3n kho...'));
-                $.getJSON('/RestaurantApi/GetCanhBaoTonKho')
+                $.ajax({ url: '/api/restaurant/inventory/alerts', method: 'GET', dataType: 'json' })
                     .done(response => {
                         if (!response?.success) {
                             $('#low-stock-list').text(response?.message || 'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c c\u1ea3nh b\u00e1o.');
