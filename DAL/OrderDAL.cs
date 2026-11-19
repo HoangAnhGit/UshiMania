@@ -168,6 +168,116 @@ public sealed class OrderDAL
         }
     }
 
+    public List<MenuCategory> GetMenuCategories()
+    {
+        const string sql = """
+            SELECT dm.ma_danh_muc, dm.ten_danh_muc,
+                   m.ma_mon_an, m.ten_mon_an, m.don_gia, m.duong_dan_anh
+            FROM danh_muc AS dm
+            LEFT JOIN mon_an AS m
+                ON m.ma_danh_muc = dm.ma_danh_muc
+               AND m.trang_thai_ban = 1
+            ORDER BY dm.thu_tu_hien_thi, dm.ma_danh_muc, m.ten_mon_an;
+            """;
+
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var command = dbHelper.CreateCommand(connection, sql);
+        using var reader = command.ExecuteReader();
+
+        var categories = new Dictionary<int, MenuCategory>();
+        while (reader.Read())
+        {
+            var categoryId = reader.GetInt32(0);
+            if (!categories.TryGetValue(categoryId, out var category))
+            {
+                category = new MenuCategory
+                {
+                    MaDanhMuc = categoryId,
+                    TenDanhMuc = reader.GetString(1)
+                };
+                categories.Add(categoryId, category);
+            }
+
+            if (!reader.IsDBNull(2))
+            {
+                category.MonAn.Add(new MenuItem
+                {
+                    MaMonAn = reader.GetInt32(2),
+                    TenMonAn = reader.GetString(3),
+                    DonGia = reader.GetDecimal(4),
+                    DuongDanAnh = reader.IsDBNull(5) ? null : reader.GetString(5)
+                });
+            }
+        }
+
+        return categories.Values.ToList();
+    }
+
+    public OrderPOSData? GetOpenOrderForTable(int tableId)
+    {
+        const string orderSql = """
+            SELECT TOP (1) d.ma_don_hang, d.ma_ban, b.so_hieu_ban,
+                   d.thoi_gian_tao, ISNULL(d.tong_tien_tam, 0)
+            FROM don_hang AS d
+            INNER JOIN ban_an AS b ON b.ma_ban = d.ma_ban
+            WHERE d.ma_ban = @ma_ban
+              AND d.trang_thai_don = @trang_thai_don
+            ORDER BY d.thoi_gian_tao DESC, d.ma_don_hang DESC;
+            """;
+
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var orderCommand = dbHelper.CreateCommand(connection, orderSql);
+        orderCommand.Parameters.AddWithValue("@ma_ban", tableId);
+        orderCommand.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+
+        OrderPOSData? order;
+        using (var reader = orderCommand.ExecuteReader())
+        {
+            if (!reader.Read())
+            {
+                return null;
+            }
+
+            order = new OrderPOSData
+            {
+                MaDonHang = reader.GetInt32(0),
+                MaBan = reader.GetInt32(1),
+                SoHieuBan = reader.GetString(2),
+                ThoiGianTao = reader.GetDateTime(3),
+                TienMonAn = reader.GetDecimal(4)
+            };
+        }
+
+        const string detailsSql = """
+            SELECT ct.ma_chi_tiet, ct.ma_mon_an, m.ten_mon_an,
+                   ct.so_luong, ct.don_gia_luc_goi, ct.ghi_chu_mon
+            FROM chi_tiet_don_hang AS ct
+            INNER JOIN mon_an AS m ON m.ma_mon_an = ct.ma_mon_an
+            WHERE ct.ma_don_hang = @ma_don_hang
+            ORDER BY ct.thoi_gian_goi, ct.ma_chi_tiet;
+            """;
+
+        using var detailsCommand = dbHelper.CreateCommand(connection, detailsSql);
+        detailsCommand.Parameters.AddWithValue("@ma_don_hang", order!.MaDonHang);
+        using var detailsReader = detailsCommand.ExecuteReader();
+        while (detailsReader.Read())
+        {
+            order.ChiTiet.Add(new OrderPOSLine
+            {
+                MaChiTiet = detailsReader.GetInt32(0),
+                MaMonAn = detailsReader.GetInt32(1),
+                TenMonAn = detailsReader.GetString(2),
+                SoLuong = detailsReader.GetInt32(3),
+                DonGia = detailsReader.GetDecimal(4),
+                GhiChuMon = detailsReader.IsDBNull(5) ? null : detailsReader.GetString(5)
+            });
+        }
+
+        return order;
+    }
+
     public List<KitchenOrderItem> GetKitchenItems()
     {
         const string sql = """

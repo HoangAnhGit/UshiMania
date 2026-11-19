@@ -18,6 +18,26 @@ namespace UshiMania.Controllers
             return View();
         }
 
+        public IActionResult SoDoBan()
+        {
+            return View();
+        }
+
+        public IActionResult OrderPOS()
+        {
+            return View();
+        }
+
+        public IActionResult ManHinhBep()
+        {
+            return View();
+        }
+
+        public IActionResult KhoBaoCao()
+        {
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();

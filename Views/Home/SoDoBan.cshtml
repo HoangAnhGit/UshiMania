@@ -1,0 +1,229 @@
+@{
+    ViewData["Title"] = "Sơ đồ bàn";
+}
+
+<div class="table-map-page">
+    <section class="table-map-panel">
+        <div class="table-map-heading">
+            <div>
+                <h1>Sơ đồ bàn</h1>
+                <p id="table-summary">Đang tải danh sách bàn...</p>
+            </div>
+            <div class="table-map-legend" aria-label="Chú giải trạng thái bàn">
+                <span><i class="legend-dot status-empty"></i>Trống</span>
+                <span><i class="legend-dot status-serving"></i>Đang phục vụ</span>
+                <span><i class="legend-dot status-checkout"></i>Chờ thanh toán</span>
+            </div>
+        </div>
+
+        <div id="table-grid" class="table-grid" aria-live="polite">
+            <div class="table-loading">Đang tải bàn...</div>
+        </div>
+
+        <div class="table-toolbar">
+            <div class="toolbar-field area-field">
+                <label for="area-filter">Lọc khu vực</label>
+                <select id="area-filter" class="form-select">
+                    <option value="">Tất cả khu vực</option>
+                </select>
+            </div>
+            <button type="button" class="pos-action-button action-blue" id="transfer-table">Chuyển bàn</button>
+            <button type="button" class="pos-action-button action-blue" id="merge-table">Gộp bàn</button>
+            <div class="toolbar-field status-field">
+                <label for="status-select">Trạng thái bàn đã chọn</label>
+                <select id="status-select" class="form-select">
+                    <option value="TRONG">Trống</option>
+                    <option value="DANG_PHUC_VU">Đang phục vụ</option>
+                    <option value="CHO_THANH_TOAN">Chờ thanh toán</option>
+                    <option value="DA_DAT">Đã đặt</option>
+                </select>
+            </div>
+            <button type="button" class="pos-action-button action-green" id="update-table-status">Cập nhật bàn</button>
+            <div id="map-message" class="map-message" role="status" aria-live="polite"></div>
+        </div>
+    </section>
+
+    <aside class="numpad-panel" aria-label="Bàn phím số để tìm bàn">
+        <div class="numpad-heading">
+            <h2>Bàn phím số</h2>
+            <span id="selected-table-label">Chưa chọn bàn</span>
+        </div>
+        <label class="numpad-label" for="table-number-search">Tìm theo số hiệu bàn</label>
+        <input id="table-number-search" class="numpad-display" type="text" inputmode="none" readonly placeholder="Nhập số bàn" />
+        <div class="numpad-keys">
+            <button type="button" data-key="1">1</button>
+            <button type="button" data-key="2">2</button>
+            <button type="button" data-key="3">3</button>
+            <button type="button" data-key="4">4</button>
+            <button type="button" data-key="5">5</button>
+            <button type="button" data-key="6">6</button>
+            <button type="button" data-key="7">7</button>
+            <button type="button" data-key="8">8</button>
+            <button type="button" data-key="9">9</button>
+            <button type="button" class="numpad-clear" data-key="clear">C</button>
+            <button type="button" data-key="0">0</button>
+            <button type="button" class="numpad-delete" data-key="delete">⌫</button>
+        </div>
+        <button type="button" class="numpad-search" id="clear-table-search">Xóa tìm kiếm</button>
+    </aside>
+</div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            let tables = [];
+            let selectedTableId = null;
+            let messageTimer;
+
+            const readValue = (obj, camelName, pascalName) => obj[camelName] ?? obj[pascalName];
+            const normalizeStatus = value => {
+                const status = (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
+                return status === 'TRONG' ? 'TRONG' : status;
+            };
+            const tableId = table => readValue(table, 'maBan', 'MaBan');
+            const tableNumber = table => readValue(table, 'soHieuBan', 'SoHieuBan') || `Bàn ${tableId(table)}`;
+            const tableArea = table => readValue(table, 'khuVuc', 'KhuVuc') || 'Chưa phân khu';
+            const statusClass = status => ({
+                TRONG: 'status-empty',
+                DANG_PHUC_VU: 'status-serving',
+                CHO_THANH_TOAN: 'status-checkout',
+                DA_DAT: 'status-reserved'
+            }[normalizeStatus(status)] || 'status-reserved');
+            const statusLabel = status => ({
+                TRONG: 'Trống',
+                DANG_PHUC_VU: 'Đang phục vụ',
+                CHO_THANH_TOAN: 'Chờ thanh toán',
+                DA_DAT: 'Đã đặt'
+            }[normalizeStatus(status)] || (status || 'Chưa xác định'));
+            const money = value => new Intl.NumberFormat('vi-VN').format(Number(value || 0)) + ' ₫';
+
+            function showMessage(message, isError = false) {
+                const element = $('#map-message');
+                element.text(message).toggleClass('message-error', isError).addClass('message-visible');
+                window.clearTimeout(messageTimer);
+                messageTimer = window.setTimeout(() => element.removeClass('message-visible'), 3500);
+            }
+
+            function fillAreas() {
+                const areaSelect = $('#area-filter');
+                const currentValue = areaSelect.val();
+                const areas = [...new Set(tables.map(tableArea))].sort((a, b) => a.localeCompare(b, 'vi'));
+                areaSelect.find('option:not(:first)').remove();
+                areas.forEach(area => areaSelect.append($('<option>').val(area).text(area)));
+                if (areas.includes(currentValue)) areaSelect.val(currentValue);
+            }
+
+            function renderTables() {
+                const area = $('#area-filter').val();
+                const numberQuery = $('#table-number-search').val().trim().toLocaleLowerCase('vi');
+                const filtered = tables.filter(table =>
+                    (!area || tableArea(table) === area) &&
+                    (!numberQuery || tableNumber(table).toLocaleLowerCase('vi').includes(numberQuery)));
+                const grid = $('#table-grid').empty();
+
+                if (!filtered.length) {
+                    grid.append($('<div class="table-loading">').text('Không tìm thấy bàn phù hợp.'));
+                }
+
+                filtered.forEach(table => {
+                    const id = tableId(table);
+                    const status = normalizeStatus(readValue(table, 'trangThai', 'TrangThai'));
+                    const amount = Number(readValue(table, 'tongTienTamTinh', 'TongTienTamTinh') || 0);
+                    const card = $('<button type="button" class="table-card">')
+                        .addClass(statusClass(status))
+                        .toggleClass('table-selected', Number(id) === Number(selectedTableId))
+                        .attr('data-table-id', id)
+                        .attr('aria-pressed', Number(id) === Number(selectedTableId))
+                        .append($('<span class="table-number">').text(tableNumber(table)))
+                        .append($('<span class="table-area">').text(tableArea(table)))
+                        .append($('<span class="table-status">').text(statusLabel(status)));
+
+                    if (status === 'DANG_PHUC_VU') {
+                        card.append($('<span class="table-total">').text(money(amount)));
+                    }
+
+                    grid.append(card);
+                });
+
+                const occupiedCount = tables.filter(table => normalizeStatus(readValue(table, 'trangThai', 'TrangThai')) === 'DANG_PHUC_VU').length;
+                $('#table-summary').text(`${tables.length} bàn · ${occupiedCount} bàn đang phục vụ`);
+                const selected = tables.find(table => Number(tableId(table)) === Number(selectedTableId));
+                $('#selected-table-label').text(selected ? `Đã chọn ${tableNumber(selected)}` : 'Chưa chọn bàn');
+                if (selected) $('#status-select').val(normalizeStatus(readValue(selected, 'trangThai', 'TrangThai')) || 'TRONG');
+            }
+
+            function loadTables() {
+                $.ajax({
+                    url: '/RestaurantApi/GetDanhSachBan',
+                    method: 'GET',
+                    dataType: 'json'
+                }).done(response => {
+                    if (!response || !response.success) {
+                        showMessage(response?.message || 'Không thể tải danh sách bàn.', true);
+                        return;
+                    }
+
+                    tables = response.data || [];
+                    fillAreas();
+                    renderTables();
+                }).fail(() => {
+                    $('#table-grid').empty().append($('<div class="table-loading">').text('Không thể kết nối máy chủ để tải bàn.'));
+                    showMessage('Tải danh sách bàn thất bại.', true);
+                });
+            }
+
+            $('#table-grid').on('click', '.table-card', function () {
+                selectedTableId = Number($(this).attr('data-table-id'));
+                renderTables();
+            });
+
+            $('#area-filter').on('change', renderTables);
+            $('#table-number-search').on('input', renderTables);
+
+            $('.numpad-keys').on('click', 'button', function () {
+                const input = $('#table-number-search');
+                const key = $(this).data('key');
+                if (key === 'clear') input.val('');
+                else if (key === 'delete') input.val(input.val().slice(0, -1));
+                else input.val(input.val() + String(key));
+                renderTables();
+            });
+
+            $('#clear-table-search').on('click', function () {
+                $('#table-number-search').val('');
+                renderTables();
+            });
+
+            $('#update-table-status').on('click', function () {
+                if (!selectedTableId) {
+                    showMessage('Vui lòng chọn bàn cần cập nhật.', true);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/RestaurantApi/CapNhatTrangThaiBan',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maBan: selectedTableId, trangThai: $('#status-select').val() })
+                }).done(response => {
+                    if (!response || !response.success) {
+                        showMessage(response?.message || 'Cập nhật trạng thái bàn thất bại.', true);
+                        return;
+                    }
+                    showMessage(response.message || 'Cập nhật trạng thái bàn thành công.');
+                    loadTables();
+                }).fail(xhr => {
+                    showMessage(xhr.responseJSON?.message || 'Cập nhật trạng thái bàn thất bại.', true);
+                });
+            });
+
+            $('#transfer-table, #merge-table').on('click', function () {
+                showMessage('Chức năng này cần action chuyển/gộp bàn trên API.', true);
+            });
+
+            loadTables();
+            window.setInterval(loadTables, 30000);
+        });
+    </script>
+}

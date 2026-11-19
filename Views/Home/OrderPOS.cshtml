@@ -1,0 +1,506 @@
+@using Microsoft.Extensions.Configuration
+@inject IConfiguration Configuration
+@{
+    ViewData["Title"] = "Order POS";
+    var vietQrBankId = Configuration["VietQr:BankId"] ?? string.Empty;
+    var vietQrAccountNumber = Configuration["VietQr:AccountNumber"] ?? string.Empty;
+    var vietQrAccountName = Configuration["VietQr:AccountName"] ?? string.Empty;
+}
+
+<div id="order-pos" class="order-pos-layout"
+     data-bank-id="@vietQrBankId"
+     data-account-number="@vietQrAccountNumber"
+     data-account-name="@vietQrAccountName">
+    <section class="order-left-column">
+        <header class="order-ticket-header">
+            <div class="order-table-select">
+                <label for="order-table-select">S&#7889; b&#224;n</label>
+                <select id="order-table-select"><option value="">Loading tables...</option></select>
+            </div>
+            <div class="order-header-facts">
+                <div><span>Gi&#7901; m&#7903;</span><strong id="opened-at">--:--</strong></div>
+                <div><span>T&#7841;m t&#237;nh</span><strong id="subtotal-value">0</strong></div>
+                <div><span>Thu&#7871; VAT 8%</span><strong id="vat-value">0</strong></div>
+                <div><span>Gi&#7843;m gi&#225;</span><strong id="discount-value">0</strong></div>
+                <div class="ticket-total"><span>Thanh to&#225;n</span><strong id="grand-total">0</strong></div>
+            </div>
+        </header>
+
+        <div class="ticket-items-heading">
+            <span>M&#243;n &#273;&#227; g&#7885;i</span>
+            <span id="current-order-label">Ch&#432;a c&#243; order</span>
+        </div>
+        <div id="order-lines" class="order-lines">
+            <div class="order-empty">Ch&#7885;n b&#224;n &#273;&#7875; xem order.</div>
+        </div>
+        <div class="order-note-box">
+            <label for="dish-note">Ghi ch&#250; m&#243;n &#273;ang ch&#7885;n</label>
+            <textarea id="dish-note" maxlength="200" placeholder="V&#237; d&#7909;: kh&#244;ng h&#224;nh..."></textarea>
+        </div>
+        <div class="order-left-actions">
+            <button type="button" class="order-action-blue" id="transfer-table">Chuy&#7875;n b&#224;n</button>
+            <button type="button" class="order-action-blue" id="merge-table">G&#7897;p b&#224;n</button>
+            <button type="button" class="order-action-blue" id="discount-mode">Gi&#7843;m gi&#225;</button>
+            <button type="button" class="order-action-blue" id="note-focus">Ghi ch&#250;</button>
+        </div>
+    </section>
+
+    <section class="order-menu-column">
+        <div class="order-menu-heading">
+            <div>
+                <h1>Danh m&#7909;c &amp; m&#243;n &#259;n</h1>
+                <p id="selected-menu-item">Ch&#432;a ch&#7885;n m&#243;n</p>
+            </div>
+            <button type="button" class="order-back-button" id="back-to-menu" hidden>Quay l&#7841;i th&#7921;c &#273;&#417;n</button>
+        </div>
+        <div id="category-grid" class="category-grid"></div>
+        <div id="menu-grid" class="menu-grid">
+            <div class="menu-empty">Loading menu...</div>
+        </div>
+        <section id="payment-panel" class="payment-panel" hidden>
+            <h2>Ch&#7885;n h&#236;nh th&#7913;c thanh to&#225;n</h2>
+            <div class="payment-method-grid">
+                <button type="button" class="payment-method" data-method="TIEN_MAT">Ti&#7873;n m&#7863;t</button>
+                <button type="button" class="payment-method" data-method="VIETQR">Chuy&#7875;n kho&#7843;n VietQR</button>
+                <button type="button" class="payment-method" data-method="THE_NGAN_HANG">C&#224; th&#7867;</button>
+            </div>
+            <div id="vietqr-box" class="vietqr-box" hidden>
+                <img id="vietqr-image" alt="VietQR payment code" />
+                <div id="vietqr-caption"></div>
+            </div>
+            <p id="payment-hint" class="payment-hint">Select a payment method.</p>
+        </section>
+    </section>
+
+    <aside class="order-keypad-column">
+        <div class="keypad-entry-head">
+            <span id="entry-mode-label">S&#7889; l&#432;&#7907;ng</span>
+            <strong id="selected-quantity">1</strong>
+        </div>
+        <div class="order-numpad">
+            <button type="button" data-digit="1">1</button>
+            <button type="button" data-digit="2">2</button>
+            <button type="button" data-digit="3">3</button>
+            <button type="button" data-digit="4">4</button>
+            <button type="button" data-digit="5">5</button>
+            <button type="button" data-digit="6">6</button>
+            <button type="button" data-digit="7">7</button>
+            <button type="button" data-digit="8">8</button>
+            <button type="button" data-digit="9">9</button>
+            <button type="button" class="keypad-clear" data-key="clear">X&#243;a</button>
+            <button type="button" data-digit="0">0</button>
+            <button type="button" class="keypad-clear" data-key="backspace">&larr;</button>
+        </div>
+        <div class="order-main-actions">
+            <button type="button" class="order-main-button action-blue" id="send-order">Order<br /><small>G&#7917;i b&#7871;p</small></button>
+            <button type="button" class="order-main-button action-orange" id="subtotal-preview">T&#7841;m t&#237;nh<br /><small>In bill</small></button>
+            <button type="button" class="order-main-button action-red" id="open-payment">Thanh to&#225;n</button>
+            <button type="button" class="order-main-button action-green" id="confirm-selection">&#10003;</button>
+            <button type="button" class="order-main-button action-red" id="cancel-action">&times;</button>
+        </div>
+    </aside>
+</div>
+
+<div id="receipt-overlay" class="pos-overlay" hidden>
+    <section class="receipt-card">
+        <button type="button" class="overlay-close" data-close-overlay>&times;</button>
+        <h2>Phi&#7871;u t&#7841;m t&#237;nh</h2>
+        <div id="receipt-content"></div>
+        <button type="button" class="receipt-print" id="print-receipt">In phi&#7871;u</button>
+    </section>
+</div>
+
+<div id="pos-message" class="pos-toast" role="status" aria-live="polite"></div>
+
+@section Scripts {
+    <script>
+        $(function () {
+            const root = $('#order-pos');
+            const qrConfig = {
+                bankId: root.attr('data-bank-id') || '',
+                accountNumber: root.attr('data-account-number') || '',
+                accountName: root.attr('data-account-name') || ''
+            };
+            let tables = [];
+            let categories = [];
+            let currentOrder = null;
+            let activeCategoryId = null;
+            let selectedItem = null;
+            let quantity = '1';
+            let discount = 0;
+            let entryMode = 'quantity';
+            let paymentMethod = null;
+            let toastTimer;
+
+            const readValue = (obj, camel, pascal) => obj?.[camel] ?? obj?.[pascal];
+            const formatMoney = value => new Intl.NumberFormat('vi-VN').format(Number(value || 0)) + ' \u20ab';
+            const subtotal = () => Number(currentOrder?.tienMonAn ?? currentOrder?.TienMonAn ?? 0);
+            const vat = () => Math.round(subtotal() * 0.08);
+            const payable = () => Math.max(0, subtotal() + vat() - discount);
+            const orderId = () => readValue(currentOrder, 'maDonHang', 'MaDonHang');
+            const selectedTableId = () => Number($('#order-table-select').val() || 0);
+
+            function notify(message, error = false) {
+                const toast = $('#pos-message').text(message).toggleClass('toast-error', error).addClass('toast-visible');
+                window.clearTimeout(toastTimer);
+                toastTimer = window.setTimeout(() => toast.removeClass('toast-visible'), 3200);
+            }
+
+            function setEntryMode(mode) {
+                entryMode = mode;
+                $('#entry-mode-label').text(mode === 'discount' ? 'Discount amount' : 'S\u1ed1 l\u01b0\u1ee3ng');
+                $('#selected-quantity').text(mode === 'discount' ? quantity : quantity);
+            }
+
+            function updateTotals() {
+                $('#subtotal-value').text(formatMoney(subtotal()));
+                $('#vat-value').text(formatMoney(vat()));
+                $('#discount-value').text(formatMoney(discount));
+                $('#grand-total').text(formatMoney(payable()));
+            }
+
+            function renderLines() {
+                const lines = readValue(currentOrder, 'chiTiet', 'ChiTiet') || [];
+                const container = $('#order-lines').empty();
+                if (!lines.length) {
+                    container.append($('<div class="order-empty">').text('No items in this order yet.'));
+                    return;
+                }
+
+                lines.forEach(line => {
+                    const name = readValue(line, 'tenMonAn', 'TenMonAn');
+                    const qty = readValue(line, 'soLuong', 'SoLuong');
+                    const price = Number(readValue(line, 'donGia', 'DonGia') || 0);
+                    const note = readValue(line, 'ghiChuMon', 'GhiChuMon');
+                    const row = $('<article class="order-line">')
+                        .append($('<div class="order-line-main">')
+                            .append($('<strong>').text(`${qty} x ${name}`))
+                            .append($('<span>').text(formatMoney(price * qty))));
+                    if (note) row.append($('<em class="order-line-note">').text(note));
+                    container.append(row);
+                });
+            }
+
+            function refreshOrder() {
+                const tableId = selectedTableId();
+                if (!tableId) {
+                    currentOrder = null;
+                    $('#opened-at').text('--:--');
+                    $('#current-order-label').text('No table selected');
+                    renderLines();
+                    updateTotals();
+                    return;
+                }
+
+                $.getJSON('/RestaurantApi/GetOrderPOS', { maBan: tableId })
+                    .done(response => {
+                        if (!response?.success) {
+                            notify(response?.message || 'Could not load order.', true);
+                            return;
+                        }
+                        currentOrder = response.data || null;
+                        discount = 0;
+                        const opened = readValue(currentOrder, 'thoiGianTao', 'ThoiGianTao');
+                        $('#opened-at').text(opened ? new Date(opened).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--');
+                        $('#current-order-label').text(orderId() ? `Order #${orderId()}` : 'New order');
+                        renderLines();
+                        updateTotals();
+                    })
+                    .fail(() => notify('Could not load order.', true));
+            }
+
+            function renderCategories() {
+                const grid = $('#category-grid').empty();
+                categories.forEach(category => {
+                    const id = readValue(category, 'maDanhMuc', 'MaDanhMuc');
+                    const button = $('<button type="button" class="category-tile">')
+                        .toggleClass('active', Number(id) === Number(activeCategoryId))
+                        .text(readValue(category, 'tenDanhMuc', 'TenDanhMuc'))
+                        .on('click', () => {
+                            activeCategoryId = id;
+                            renderCategories();
+                            renderMenuItems();
+                        });
+                    grid.append(button);
+                });
+            }
+
+            function renderMenuItems() {
+                const category = categories.find(item => Number(readValue(item, 'maDanhMuc', 'MaDanhMuc')) === Number(activeCategoryId));
+                const items = category ? (readValue(category, 'monAn', 'MonAn') || []) : [];
+                const grid = $('#menu-grid').empty();
+                if (!items.length) {
+                    grid.append($('<div class="menu-empty">').text('No active dishes in this category.'));
+                    return;
+                }
+
+                items.forEach(item => {
+                    const id = readValue(item, 'maMonAn', 'MaMonAn');
+                    const card = $('<button type="button" class="dish-tile">')
+                        .toggleClass('active', Number(readValue(selectedItem, 'maMonAn', 'MaMonAn')) === Number(id))
+                        .append($('<strong>').text(readValue(item, 'tenMonAn', 'TenMonAn')))
+                        .append($('<span>').text(formatMoney(readValue(item, 'donGia', 'DonGia'))))
+                        .on('click', () => {
+                            selectedItem = item;
+                            quantity = '1';
+                            setEntryMode('quantity');
+                            $('#selected-quantity').text(quantity);
+                            $('#selected-menu-item').text(readValue(item, 'tenMonAn', 'TenMonAn'));
+                            renderMenuItems();
+                        });
+                    grid.append(card);
+                });
+            }
+
+            function loadMenu() {
+                $.getJSON('/RestaurantApi/GetDanhMucMonAn')
+                    .done(response => {
+                        if (!response?.success) {
+                            $('#menu-grid').text(response?.message || 'Could not load menu.');
+                            return;
+                        }
+                        categories = response.data || [];
+                        activeCategoryId = categories.length ? readValue(categories[0], 'maDanhMuc', 'MaDanhMuc') : null;
+                        renderCategories();
+                        renderMenuItems();
+                    })
+                    .fail(() => $('#menu-grid').text('Could not load menu.'));
+            }
+
+            function loadTables() {
+                $.getJSON('/RestaurantApi/GetDanhSachBan')
+                    .done(response => {
+                        if (!response?.success) {
+                            notify(response?.message || 'Could not load tables.', true);
+                            return;
+                        }
+                        tables = response.data || [];
+                        const select = $('#order-table-select');
+                        const selected = select.val();
+                        select.empty().append($('<option value="">').text('Select a table'));
+                        tables.forEach(table => {
+                            const id = readValue(table, 'maBan', 'MaBan');
+                            const number = readValue(table, 'soHieuBan', 'SoHieuBan');
+                            const area = readValue(table, 'khuVuc', 'KhuVuc');
+                            select.append($('<option>').val(id).text(`${number} - ${area || ''}`));
+                        });
+                        if (selected && tables.some(table => Number(readValue(table, 'maBan', 'MaBan')) === Number(selected))) {
+                            select.val(selected);
+                        }
+                        refreshOrder();
+                    })
+                    .fail(() => notify('Could not load tables.', true));
+            }
+
+            function addSelectedItem() {
+                if (!selectedItem) {
+                    notify('Select a dish first.', true);
+                    return;
+                }
+                const tableId = selectedTableId();
+                if (!tableId) {
+                    notify('Select a table first.', true);
+                    return;
+                }
+                const qty = Math.max(1, parseInt(quantity || '1', 10));
+                const request = {
+                    maBan: tableId,
+                    maDonHang: orderId() || null,
+                    maMonAn: readValue(selectedItem, 'maMonAn', 'MaMonAn'),
+                    soLuong: qty,
+                    ghiChuMon: $('#dish-note').val() || null
+                };
+                $.ajax({
+                    url: '/RestaurantApi/TaoHoacCapNhatOrder',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify(request)
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'Could not add dish.', true);
+                        return;
+                    }
+                    $('#dish-note').val('');
+                    selectedItem = null;
+                    $('#selected-menu-item').text('Select a dish');
+                    notify('Dish added to the order and queued for kitchen.');
+                    loadTables();
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Could not add dish.', true));
+            }
+
+            function buildVietQr() {
+                if (!qrConfig.bankId || !qrConfig.accountNumber) {
+                    $('#vietqr-box').prop('hidden', true);
+                    $('#payment-hint').text('Configure VietQr:BankId and VietQr:AccountNumber in appsettings.json to create a payable QR.');
+                    return;
+                }
+                const order = orderId();
+                const params = new URLSearchParams({
+                    amount: String(Math.round(payable())),
+                    addInfo: `USHI ORDER ${order}`,
+                    accountName: qrConfig.accountName
+                });
+                const imageUrl = `https://img.vietqr.io/image/${encodeURIComponent(qrConfig.bankId)}-${encodeURIComponent(qrConfig.accountNumber)}-compact2.png?${params}`;
+                $('#vietqr-image').attr('src', imageUrl);
+                $('#vietqr-caption').text(`Order #${order} - ${formatMoney(payable())}`);
+                $('#vietqr-box').prop('hidden', false);
+                $('#payment-hint').text('Scan the QR code, then confirm the received payment.');
+            }
+
+            function showPayment() {
+                if (!orderId() || !subtotal()) {
+                    notify('Add at least one dish before payment.', true);
+                    return;
+                }
+                $('#category-grid, #menu-grid').prop('hidden', true);
+                $('#payment-panel').prop('hidden', false);
+                $('#back-to-menu').prop('hidden', false);
+                paymentMethod = null;
+                $('.payment-method').removeClass('active');
+                $('#vietqr-box').prop('hidden', true);
+                $('#payment-hint').text('Select a payment method.');
+            }
+
+            function confirmPayment() {
+                if (!orderId() || !paymentMethod) {
+                    notify('Select an order and payment method.', true);
+                    return;
+                }
+                if (paymentMethod === 'VIETQR' && (!qrConfig.bankId || !qrConfig.accountNumber)) {
+                    notify('VietQR bank details are not configured.', true);
+                    return;
+                }
+                $.ajax({
+                    url: '/RestaurantApi/ThanhToanVaTruKho',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({
+                        maDonHang: orderId(),
+                        hinhThucTra: paymentMethod,
+                        tienGiamGia: discount
+                    })
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'Payment failed.', true);
+                        return;
+                    }
+                    currentOrder = null;
+                    discount = 0;
+                    $('#payment-panel').prop('hidden', true);
+                    $('#category-grid, #menu-grid').prop('hidden', false);
+                    notify('Payment completed.');
+                    loadTables();
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Payment failed.', true));
+            }
+
+            function showReceipt() {
+                const lines = readValue(currentOrder, 'chiTiet', 'ChiTiet') || [];
+                const content = $('#receipt-content').empty();
+                content.append($('<p>').text(`Table: ${$('#order-table-select option:selected').text()}`));
+                lines.forEach(line => {
+                    const qty = readValue(line, 'soLuong', 'SoLuong');
+                    const name = readValue(line, 'tenMonAn', 'TenMonAn');
+                    const price = Number(readValue(line, 'donGia', 'DonGia') || 0) * qty;
+                content.append($('<div class="receipt-line">').text(`${qty} x ${name} - ${formatMoney(price)}`));
+                });
+                content.append($('<hr>'));
+                content.append($('<div class="receipt-line">').text(`Subtotal: ${formatMoney(subtotal())}`));
+                content.append($('<div class="receipt-line">').text(`VAT 8%: ${formatMoney(vat())}`));
+                content.append($('<div class="receipt-line">').text(`Discount: ${formatMoney(discount)}`));
+                content.append($('<strong class="receipt-total">').text(`Total: ${formatMoney(payable())}`));
+                $('#receipt-overlay').prop('hidden', false);
+            }
+
+            $('#order-table-select').on('change', function () {
+                currentOrder = null;
+                discount = 0;
+                selectedItem = null;
+                $('#dish-note').val('');
+                refreshOrder();
+            });
+
+            $('.order-numpad').on('click', 'button', function () {
+                const key = $(this).data('key');
+                if (key === 'clear') quantity = '';
+                else if (key === 'backspace') quantity = quantity.slice(0, -1);
+                else quantity += String($(this).data('digit'));
+                $('#selected-quantity').text(quantity || '0');
+            });
+
+            $('#discount-mode').on('click', function () {
+                setEntryMode('discount');
+                quantity = String(discount || '');
+                $('#selected-quantity').text(quantity || '0');
+                notify('Enter a discount amount, then press the green check.');
+            });
+
+            $('#confirm-selection').on('click', function () {
+                if (!$('#payment-panel').prop('hidden')) {
+                    confirmPayment();
+                    return;
+                }
+                if (entryMode === 'discount') {
+                    discount = Math.max(0, Number(quantity || 0));
+                    updateTotals();
+                    setEntryMode('quantity');
+                    quantity = '1';
+                    $('#selected-quantity').text(quantity);
+                    return;
+                }
+                addSelectedItem();
+            });
+
+            $('#cancel-action').on('click', function () {
+                if (!$('#payment-panel').prop('hidden')) {
+                    $('#payment-panel').prop('hidden', true);
+                    $('#category-grid, #menu-grid').prop('hidden', false);
+                    $('#back-to-menu').prop('hidden', true);
+                }
+                selectedItem = null;
+                quantity = '1';
+                setEntryMode('quantity');
+                $('#selected-quantity').text(quantity);
+                $('#selected-menu-item').text('Select a dish');
+                $('#dish-note').val('');
+                renderMenuItems();
+            });
+
+            $('#note-focus').on('click', () => $('#dish-note').trigger('focus'));
+            $('#send-order').on('click', function () {
+                if (!orderId()) {
+                    notify('Add a dish before sending the order.', true);
+                    return;
+                }
+                notify('Order is saved and visible to the kitchen queue.');
+            });
+            $('#subtotal-preview').on('click', showReceipt);
+            $('#open-payment').on('click', showPayment);
+            $('#back-to-menu').on('click', function () {
+                $('#payment-panel').prop('hidden', true);
+                $('#category-grid, #menu-grid').prop('hidden', false);
+                $(this).prop('hidden', true);
+            });
+            $('.payment-method').on('click', function () {
+                paymentMethod = $(this).data('method');
+                $('.payment-method').removeClass('active');
+                $(this).addClass('active');
+                if (paymentMethod === 'VIETQR') buildVietQr();
+                else {
+                    $('#vietqr-box').prop('hidden', true);
+                    $('#payment-hint').text('Press the green check to confirm payment.');
+                }
+            });
+            $('[data-close-overlay]').on('click', () => $('#receipt-overlay').prop('hidden', true));
+            $('#receipt-overlay').on('click', event => {
+                if (event.target === event.currentTarget) $('#receipt-overlay').prop('hidden', true);
+            });
+            $('#print-receipt').on('click', () => window.print());
+            $('#transfer-table, #merge-table').on('click', () => notify('Table transfer/merge requires a dedicated API action.', true));
+
+            loadMenu();
+            loadTables();
+        });
+    </script>
+}

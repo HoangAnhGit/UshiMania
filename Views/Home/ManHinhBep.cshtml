@@ -1,0 +1,152 @@
+@{
+    ViewData["Title"] = "B\u1EBFp KDS";
+}
+
+<section class="kitchen-screen" aria-label="H&#7879; th&#7889;ng m&#224;n h&#236;nh b&#7871;p">
+    <header class="kitchen-heading">
+        <div>
+            <h1>M&#192;N H&#204;NH B&#7870;P</h1>
+            <p id="kitchen-summary">&#272;ang k&#7871;t n&#7889;i...</p>
+        </div>
+        <div class="kitchen-filters" role="group" aria-label="L&#7885;c tr&#7841;ng th&#225;i order">
+            <button type="button" class="kitchen-filter active" data-filter="ALL">T&#7845;t c&#7843;</button>
+            <button type="button" class="kitchen-filter" data-filter="CHO_NAU">Ch&#7901; n&#7845;u</button>
+            <button type="button" class="kitchen-filter" data-filter="DANG_NAU">&#272;ang n&#7845;u</button>
+            <button type="button" class="kitchen-filter" data-filter="DA_XONG">&#272;&#227; xong</button>
+        </div>
+    </header>
+    <div id="kitchen-tickets" class="kitchen-ticket-grid" aria-live="polite">
+        <div class="kitchen-empty">&#272;ang t&#7843;i phi&#7871;u b&#7871;p...</div>
+    </div>
+    <div id="kitchen-message" class="kitchen-message" role="status" aria-live="polite"></div>
+</section>
+
+@section Scripts {
+    <script>
+        $(function () {
+            let orders = [];
+            let activeFilter = 'ALL';
+            let refreshInProgress = false;
+            let messageTimer;
+            const updatingIds = new Set();
+            const statusNames = {
+                CHO_NAU: 'Ch\u1edd n\u1ea5u',
+                DANG_NAU: '\u0110ang n\u1ea5u',
+                DA_XONG: '\u0110\u00e3 xong'
+            };
+            const readValue = (obj, camel, pascal) => obj?.[camel] ?? obj?.[pascal];
+            const normalizeStatus = value => String(value || 'CHO_NAU').trim().toUpperCase();
+            const callTime = value => value ? new Date(value).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '--:--';
+
+            function showMessage(message, isError = false) {
+                const element = $('#kitchen-message').text(message).toggleClass('message-error', isError).addClass('message-visible');
+                window.clearTimeout(messageTimer);
+                messageTimer = window.setTimeout(() => element.removeClass('message-visible'), 3000);
+            }
+
+            function actionFor(status) {
+                if (status === 'CHO_NAU') return { next: 'DANG_NAU', label: 'B\u1eaft \u0111\u1ea7u n\u1ea5u', className: 'ticket-start' };
+                if (status === 'DANG_NAU') return { next: 'DA_XONG', label: '\u0110\u00e1nh d\u1ea5u \u0111\u00e3 xong', className: 'ticket-done' };
+                return null;
+            }
+
+            function renderTickets() {
+                const grid = $('#kitchen-tickets').empty();
+                const visibleOrders = orders.filter(order => activeFilter === 'ALL' || normalizeStatus(readValue(order, 'tienDoBep', 'TienDoBep')) === activeFilter);
+                if (!visibleOrders.length) {
+                    grid.append($('<div class="kitchen-empty">').text('Kh\u00f4ng c\u00f3 phi\u1ebfu ph\u00f9 h\u1ee3p.'));
+                    return;
+                }
+
+                visibleOrders.forEach(order => {
+                    const detailId = readValue(order, 'maChiTiet', 'MaChiTiet');
+                    const orderId = readValue(order, 'maDonHang', 'MaDonHang');
+                    const tableNumber = readValue(order, 'soHieuBan', 'SoHieuBan') || `#${orderId}`;
+                    const dishName = readValue(order, 'tenMonAn', 'TenMonAn') || '';
+                    const quantity = readValue(order, 'soLuong', 'SoLuong') || 0;
+                    const note = readValue(order, 'ghiChuMon', 'GhiChuMon');
+                    const status = normalizeStatus(readValue(order, 'tienDoBep', 'TienDoBep'));
+                    const action = actionFor(status);
+                    const ticket = $('<article class="kitchen-ticket">').addClass(`ticket-${status.toLowerCase()}`);
+                    const head = $('<header class="ticket-header">')
+                        .append($('<span class="ticket-table">').text(tableNumber))
+                        .append($('<span class="ticket-order-id">').text(`Order #${orderId}`));
+                    ticket.append(head);
+                    ticket.append($('<div class="ticket-call-time">').text(`G\u1ecdi l\u00fac: ${callTime(readValue(order, 'thoiGianGoi', 'ThoiGianGoi'))}`));
+                    ticket.append($('<h2 class="ticket-dish-name">').text(dishName));
+                    ticket.append($('<div class="ticket-quantity">').text(`SL: ${quantity}`));
+                    if (note) {
+                        ticket.append($('<div class="ticket-note">')
+                            .append($('<span>').text('GHI CH\u00da'))
+                            .append($('<strong>').text(note)));
+                    }
+                    ticket.append($('<div class="ticket-status-label">').text(statusNames[status] || status));
+                    if (action) {
+                        const button = $('<button type="button" class="ticket-action">')
+                            .addClass(action.className)
+                            .text(action.label)
+                            .prop('disabled', updatingIds.has(Number(detailId)))
+                            .on('click', () => updateProgress(Number(detailId), action.next));
+                        ticket.append(button);
+                    } else {
+                        ticket.append($('<button type="button" class="ticket-action ticket-complete" disabled>').text('\u0110\u00e3 ho\u00e0n th\u00e0nh'));
+                    }
+                    grid.append(ticket);
+                });
+            }
+
+            function loadKitchenOrders() {
+                if (refreshInProgress) return;
+                refreshInProgress = true;
+                $.getJSON('/RestaurantApi/GetDanhSachMonBep')
+                    .done(response => {
+                        if (!response || !response.success) {
+                            showMessage(response?.message || 'Kh\u00f4ng th\u1ec3 t\u1ea3i phi\u1ebfu b\u1ebfp.', true);
+                            return;
+                        }
+                        orders = response.data || [];
+                        const waiting = orders.filter(item => normalizeStatus(readValue(item, 'tienDoBep', 'TienDoBep')) === 'CHO_NAU').length;
+                        const cooking = orders.filter(item => normalizeStatus(readValue(item, 'tienDoBep', 'TienDoBep')) === 'DANG_NAU').length;
+                        $('#kitchen-summary').text(`${orders.length} phi\u1ebfu | Ch\u1edd n\u1ea5u: ${waiting} | \u0110ang n\u1ea5u: ${cooking}`);
+                        renderTickets();
+                    })
+                    .fail(() => showMessage('Kh\u00f4ng th\u1ec3 k\u1ebft n\u1ed1i API b\u1ebfp.', true))
+                    .always(() => refreshInProgress = false);
+            }
+
+            function updateProgress(detailId, nextStatus) {
+                if (!detailId || updatingIds.has(detailId)) return;
+                updatingIds.add(detailId);
+                renderTickets();
+                $.ajax({
+                    url: '/RestaurantApi/CapNhatTienDoBep',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maChiTiet: detailId, tienDoBep: nextStatus })
+                }).done(response => {
+                    if (!response || !response.success) {
+                        showMessage(response?.message || 'Kh\u00f4ng th\u1ec3 c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i b\u1ebfp.', true);
+                        return;
+                    }
+                    showMessage('\u0110\u00e3 c\u1eadp nh\u1eadt phi\u1ebfu b\u1ebfp.');
+                    loadKitchenOrders();
+                }).fail(xhr => showMessage(xhr.responseJSON?.message || 'Kh\u00f4ng th\u1ec3 c\u1eadp nh\u1eadt tr\u1ea1ng th\u00e1i b\u1ebfp.', true))
+                    .always(() => {
+                        updatingIds.delete(detailId);
+                        renderTickets();
+                    });
+            }
+
+            $('.kitchen-filters').on('click', '.kitchen-filter', function () {
+                activeFilter = $(this).data('filter');
+                $('.kitchen-filter').removeClass('active');
+                $(this).addClass('active');
+                renderTickets();
+            });
+
+            loadKitchenOrders();
+            window.setInterval(loadKitchenOrders, 3000);
+        });
+    </script>
+}

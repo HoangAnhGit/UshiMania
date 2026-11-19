@@ -15,9 +15,16 @@ public sealed class BanAnDAL
     public List<BanAn> GetAll()
     {
         const string sql = """
-            SELECT ma_ban, so_hieu_ban, khu_vuc, suc_chua, trang_thai
-            FROM ban_an
-            ORDER BY khu_vuc, so_hieu_ban;
+            SELECT b.ma_ban, b.so_hieu_ban, b.khu_vuc, b.suc_chua, b.trang_thai,
+                   ISNULL(active_orders.tong_tien_tam, 0) AS tong_tien_tam
+            FROM ban_an AS b
+            OUTER APPLY (
+                SELECT SUM(ISNULL(d.tong_tien_tam, 0)) AS tong_tien_tam
+                FROM don_hang AS d
+                WHERE d.ma_ban = b.ma_ban
+                  AND d.trang_thai_don = N'DANG_MO'
+            ) AS active_orders
+            ORDER BY b.khu_vuc, b.so_hieu_ban;
             """;
 
         using var connection = dbHelper.CreateConnection();
@@ -34,7 +41,8 @@ public sealed class BanAnDAL
                 SoHieuBan = reader.GetString(1),
                 KhuVuc = reader.GetString(2),
                 SucChua = reader.GetInt32(3),
-                TrangThai = reader.IsDBNull(4) ? null : reader.GetString(4)
+                TrangThai = reader.IsDBNull(4) ? null : reader.GetString(4),
+                TongTienTamTinh = reader.GetDecimal(5)
             });
         }
 

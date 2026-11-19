@@ -64,6 +64,21 @@ public sealed class OrderBLL
         return orderDAL.GetKitchenItems();
     }
 
+    public List<MenuCategory> GetMenuCategories()
+    {
+        return orderDAL.GetMenuCategories();
+    }
+
+    public OrderPOSData? GetOpenOrderForTable(int tableId)
+    {
+        if (tableId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tableId), "Table ID must be positive.");
+        }
+
+        return orderDAL.GetOpenOrderForTable(tableId);
+    }
+
     public bool UpdateKitchenProgress(int detailId, string progress)
     {
         if (detailId <= 0)

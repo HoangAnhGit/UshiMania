@@ -1,0 +1,299 @@
+@{
+    ViewData["Title"] = "Kho & B\u00e1o c\u00e1o";
+}
+
+<section class="reports-screen">
+    <header class="reports-heading">
+        <div>
+            <h1>XEM B&#193;O C&#193;O</h1>
+            <p id="reports-status">&#272;ang t&#7843;i d&#7919; li&#7879;u...</p>
+        </div>
+        <div class="report-date-filter">
+            <label for="report-from">T&#7915; ng&#224;y</label>
+            <input id="report-from" type="date" />
+            <label for="report-to">&#272;&#7871;n ng&#224;y</label>
+            <input id="report-to" type="date" />
+            <button type="button" id="reload-report">Xem</button>
+        </div>
+    </header>
+
+    <nav class="report-shortcuts" aria-label="Ch&#7885;n lo&#7841;i b&#225;o c&#225;o">
+        <button type="button" class="report-shortcut active" data-report="revenue">
+            <span class="shortcut-number">1</span>
+            <strong>B&#225;o c&#225;o doanh thu theo gi&#7901;</strong>
+        </button>
+        <button type="button" class="report-shortcut" data-report="best-sellers">
+            <span class="shortcut-number">2</span>
+            <strong>M&#243;n b&#225;n ch&#7841;y</strong>
+        </button>
+        <button type="button" class="report-shortcut" data-report="inventory">
+            <span class="shortcut-number">3</span>
+            <strong>T&#7891;n kho nguy&#234;n li&#7879;u</strong>
+        </button>
+        <button type="button" class="report-shortcut" data-report="inventory-history">
+            <span class="shortcut-number">4</span>
+            <strong>L&#7883;ch s&#7917; tr&#7915; kho</strong>
+        </button>
+    </nav>
+
+    <div class="reports-content">
+        <section class="report-results-card">
+            <header class="report-card-heading">
+                <div>
+                    <h2 id="report-title">Doanh thu theo gi&#7901;</h2>
+                    <p id="report-subtitle">T&#7893;ng h&#7907;p h&#243;a &#273;&#417;n theo khung gi&#7901;</p>
+                </div>
+                <strong id="report-total" class="report-total">0</strong>
+            </header>
+            <div id="report-results" class="report-results" aria-live="polite">
+                <div class="report-empty">&#272;ang t&#7843;i b&#225;o c&#225;o...</div>
+            </div>
+            <div id="unsupported-report" class="report-unavailable" hidden></div>
+        </section>
+
+        <aside class="low-stock-card">
+            <header>
+                <span class="warning-symbol">!</span>
+                <div>
+                    <h2>C&#7842;NH B&#193;O T&#7890;N KHO</h2>
+                    <p id="low-stock-summary">&#272;ang ki&#7875;m tra nguy&#234;n li&#7879;u...</p>
+                </div>
+            </header>
+            <div id="low-stock-list" class="low-stock-list" aria-live="polite">
+                <div class="report-empty">&#272;ang t&#7843;i c&#7843;nh b&#225;o...</div>
+            </div>
+        </aside>
+    </div>
+</section>
+
+@section Scripts {
+    <script>
+        $(function () {
+            let reportMode = 'revenue';
+            let revenueRows = [];
+            let stockWarnings = [];
+            let bestSellerRows = [];
+            let inventoryHistoryRows = [];
+
+            const readValue = (obj, camel, pascal) => obj?.[camel] ?? obj?.[pascal];
+            const money = value => new Intl.NumberFormat('vi-VN').format(Number(value || 0)) + ' \u20ab';
+            const localDate = date => {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            };
+
+            function loadRevenue() {
+                $('#report-results').empty().append($('<div class="report-empty">').text('\u0110ang t\u1ea3i b\u00e1o c\u00e1o doanh thu...'));
+                $.getJSON('/RestaurantApi/GetBaoCaoDoanhThu', {
+                    tuNgay: $('#report-from').val(),
+                    denNgay: $('#report-to').val(),
+                    theoGio: true
+                }).done(response => {
+                    if (!response?.success) {
+                        $('#report-results').text(response?.message || 'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c b\u00e1o c\u00e1o.');
+                        return;
+                    }
+                    revenueRows = response.data || [];
+                    renderRevenue();
+                }).fail(() => $('#report-results').text('Kh\u00f4ng k\u1ebft n\u1ed1i \u0111\u01b0\u1ee3c API doanh thu.'));
+            }
+
+            function renderRevenue() {
+                const container = $('#report-results').empty();
+                const total = revenueRows.reduce((sum, row) => sum + Number(readValue(row, 'tongDoanhThu', 'TongDoanhThu') || 0), 0);
+                $('#report-total').text(money(total));
+                if (!revenueRows.length) {
+                    container.append($('<div class="report-empty">').text('Ch\u01b0a c\u00f3 doanh thu trong kho\u1ea3ng th\u1eddi gian n\u00e0y.'));
+                    return;
+                }
+
+                const maxTotal = Math.max(...revenueRows.map(row => Number(readValue(row, 'tongDoanhThu', 'TongDoanhThu') || 0)), 1);
+                const table = $('<table class="report-table"><thead><tr><th>Gi&#7901;</th><th>H&#243;a &#273;&#417;n</th><th>Ti&#7873;n m&#243;n</th><th>VAT 8%</th><th>Doanh thu</th></tr></thead><tbody></tbody></table>');
+                const body = table.find('tbody');
+                revenueRows.forEach(row => {
+                    const period = new Date(readValue(row, 'ngay', 'Ngay'));
+                    const hour = period.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+                    const rowTotal = Number(readValue(row, 'tongDoanhThu', 'TongDoanhThu') || 0);
+                    const tr = $('<tr>')
+                        .append($('<td class="report-period">').text(hour))
+                        .append($('<td>').text(readValue(row, 'soHoaDon', 'SoHoaDon')))
+                        .append($('<td>').text(money(readValue(row, 'tienMonAn', 'TienMonAn'))))
+                        .append($('<td>').text(money(readValue(row, 'tienThueVat', 'TienThueVat'))))
+                        .append($('<td class="report-revenue-cell">')
+                            .append($('<strong>').text(money(rowTotal)))
+                            .append($('<span class="report-bar">').append($('<i>').css('width', `${Math.max(3, rowTotal / maxTotal * 100)}%`))));
+                    body.append(tr);
+                });
+                container.append(table);
+            }
+
+            function loadBestSellers() {
+                $('#report-results').empty().append($('<div class="report-empty">').text('\u0110ang t\u1ea3i m\u00f3n b\u00e1n ch\u1ea1y...'));
+                $.getJSON('/RestaurantApi/GetMonBanChay', {
+                    tuNgay: $('#report-from').val(),
+                    denNgay: $('#report-to').val()
+                }).done(response => {
+                    if (!response?.success) {
+                        $('#report-results').text(response?.message || 'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c b\u00e1o c\u00e1o.');
+                        return;
+                    }
+                    bestSellerRows = response.data || [];
+                    renderBestSellers();
+                }).fail(() => $('#report-results').text('Kh\u00f4ng k\u1ebft n\u1ed1i \u0111\u01b0\u1ee3c API m\u00f3n b\u00e1n ch\u1ea1y.'));
+            }
+
+            function renderBestSellers() {
+                const container = $('#report-results').empty();
+                $('#report-total').text(`${bestSellerRows.length} m\u00f3n`);
+                if (!bestSellerRows.length) {
+                    container.append($('<div class="report-empty">').text('Ch\u01b0a c\u00f3 m\u00f3n \u0111\u01b0\u1ee3c thanh to\u00e1n trong kho\u1ea3ng th\u1eddi gian n\u00e0y.'));
+                    return;
+                }
+
+                const table = $('<table class="report-table"><thead><tr><th>H\u1ea1ng</th><th>M\u00f3n \u0103n</th><th>S\u1ed1 l\u01b0\u1ee3ng b\u00e1n</th><th>Doanh thu</th></tr></thead><tbody></tbody></table>');
+                bestSellerRows.forEach((item, index) => table.find('tbody').append($('<tr>')
+                    .append($('<td class="report-period">').text(index + 1))
+                    .append($('<td>').text(readValue(item, 'tenMonAn', 'TenMonAn')))
+                    .append($('<td>').text(readValue(item, 'soLuongBan', 'SoLuongBan')))
+                    .append($('<td class="report-period">').text(money(readValue(item, 'doanhThu', 'DoanhThu'))))));
+                container.append(table);
+            }
+
+            function loadInventoryHistory() {
+                $('#report-results').empty().append($('<div class="report-empty">').text('\u0110ang t\u1ea3i l\u1ecbch s\u1eed kho...'));
+                $.getJSON('/RestaurantApi/GetLichSuTruKho', {
+                    tuNgay: $('#report-from').val(),
+                    denNgay: $('#report-to').val()
+                }).done(response => {
+                    if (!response?.success) {
+                        $('#report-results').text(response?.message || 'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c l\u1ecbch s\u1eed kho.');
+                        return;
+                    }
+                    inventoryHistoryRows = response.data || [];
+                    renderInventoryHistory();
+                }).fail(() => $('#report-results').text('Kh\u00f4ng k\u1ebft n\u1ed1i \u0111\u01b0\u1ee3c API l\u1ecbch s\u1eed kho.'));
+            }
+
+            function renderInventoryHistory() {
+                const container = $('#report-results').empty();
+                $('#report-total').text(`${inventoryHistoryRows.length} giao d\u1ecbch`);
+                if (!inventoryHistoryRows.length) {
+                    container.append($('<div class="report-empty">').text('Ch\u01b0a c\u00f3 l\u1ecbch s\u1eed tr\u1eeb kho trong kho\u1ea3ng th\u1eddi gian n\u00e0y.'));
+                    return;
+                }
+
+                const table = $('<table class="report-table"><thead><tr><th>Th\u1eddi gian</th><th>Nguy\u00ean li\u1ec7u</th><th>Order</th><th>Bi\u1ebfn \u0111\u1ed9ng</th><th>S\u1ed1 l\u01b0\u1ee3ng</th></tr></thead><tbody></tbody></table>');
+                inventoryHistoryRows.forEach(item => {
+                    const time = new Date(readValue(item, 'thoiGian', 'ThoiGian')).toLocaleString('vi-VN');
+                    table.find('tbody').append($('<tr>')
+                        .append($('<td>').text(time))
+                        .append($('<td>').text(readValue(item, 'tenNguyenLieu', 'TenNguyenLieu')))
+                        .append($('<td>').text(readValue(item, 'maDonHang', 'MaDonHang') || '-'))
+                        .append($('<td>').text(readValue(item, 'loaiBienDong', 'LoaiBienDong')))
+                        .append($('<td class="stock-row-low">').text(readValue(item, 'soLuongThayDoi', 'SoLuongThayDoi'))));
+                });
+                container.append(table);
+            }
+
+            function loadInventory() {
+                $('#low-stock-list').empty().append($('<div class="report-empty">').text('\u0110ang ki\u1ec3m tra t\u1ed3n kho...'));
+                $.getJSON('/RestaurantApi/GetCanhBaoTonKho')
+                    .done(response => {
+                        if (!response?.success) {
+                            $('#low-stock-list').text(response?.message || 'Kh\u00f4ng t\u1ea3i \u0111\u01b0\u1ee3c c\u1ea3nh b\u00e1o.');
+                            return;
+                        }
+                        stockWarnings = response.data || [];
+                        renderWarnings();
+                        if (reportMode === 'inventory') renderInventoryTable();
+                    })
+                    .fail(() => $('#low-stock-list').text('Kh\u00f4ng k\u1ebft n\u1ed1i \u0111\u01b0\u1ee3c API t\u1ed3n kho.'));
+            }
+
+            function renderWarnings() {
+                const list = $('#low-stock-list').empty();
+                $('#low-stock-summary').text(stockWarnings.length
+                    ? `${stockWarnings.length} nguy\u00ean li\u1ec7u c\u1ea7n ch\u00fa \u00fd`
+                    : 'Kh\u00f4ng c\u00f3 nguy\u00ean li\u1ec7u d\u01b0\u1edbi ng\u01b0\u1ee1ng.');
+                if (!stockWarnings.length) {
+                    list.append($('<div class="stock-clear">').text('\u2713 T\u1ed3n kho \u0111ang an to\u00e0n.'));
+                    return;
+                }
+                stockWarnings.forEach(item => {
+                    const name = readValue(item, 'tenNguyenLieu', 'TenNguyenLieu');
+                    const stock = readValue(item, 'soLuongTon', 'SoLuongTon');
+                    const threshold = readValue(item, 'nguongToiThieu', 'NguongToiThieu');
+                    const unit = readValue(item, 'donViTinh', 'DonViTinh');
+                    list.append($('<article class="stock-warning">')
+                        .append($('<strong>').text(name))
+                        .append($('<span>').text(`${stock} / ${threshold} ${unit}`))
+                        .append($('<small>').text('\u0110\u00e3 ch\u1ea1m ng\u01b0\u1ee1ng t\u1ed1i thi\u1ec3u')));
+                });
+            }
+
+            function renderInventoryTable() {
+                $('#report-title').text('T\u1ed3n kho nguy\u00ean li\u1ec7u');
+                $('#report-subtitle').text('Danh s\u00e1ch nguy\u00ean li\u1ec7u c\u1ea7n theo d\u00f5i');
+                $('#report-total').text(`${stockWarnings.length} c\u1ea3nh b\u00e1o`);
+                const container = $('#report-results').empty();
+                if (!stockWarnings.length) {
+                    container.append($('<div class="report-empty">').text('Kh\u00f4ng c\u00f3 nguy\u00ean li\u1ec7u n\u00e0o d\u01b0\u1edbi ng\u01b0\u1ee1ng.'));
+                    return;
+                }
+                const table = $('<table class="report-table"><thead><tr><th>Nguy&#234;n li&#7879;u</th><th>T&#7891;n kho</th><th>Ng&#432;&#7905;ng t&#7889;i thi&#7875;u</th><th>&#272;&#417;n v&#7883;</th></tr></thead><tbody></tbody></table>');
+                stockWarnings.forEach(item => table.find('tbody').append($('<tr class="stock-row-low">')
+                    .append($('<td>').text(readValue(item, 'tenNguyenLieu', 'TenNguyenLieu')))
+                    .append($('<td>').text(readValue(item, 'soLuongTon', 'SoLuongTon')))
+                    .append($('<td>').text(readValue(item, 'nguongToiThieu', 'NguongToiThieu')))
+                    .append($('<td>').text(readValue(item, 'donViTinh', 'DonViTinh')))));
+                container.append(table);
+            }
+
+            function selectReport(mode) {
+                reportMode = mode;
+                $('.report-shortcut').removeClass('active').filter(`[data-report="${mode}"]`).addClass('active');
+                $('#unsupported-report').prop('hidden', true).empty();
+                $('#report-results').prop('hidden', false);
+                if (mode === 'revenue') {
+                    $('#report-title').text('Doanh thu theo gi\u1edd');
+                    $('#report-subtitle').text('T\u1ed5ng h\u1ee3p h\u00f3a \u0111\u01a1n theo khung gi\u1edd');
+                    loadRevenue();
+                } else if (mode === 'best-sellers') {
+                    $('#report-title').text('M\u00f3n b\u00e1n ch\u1ea1y');
+                    $('#report-subtitle').text('X\u1ebfp h\u1ea1ng theo s\u1ed1 l\u01b0\u1ee3ng m\u00f3n \u0111\u00e3 thanh to\u00e1n');
+                    loadBestSellers();
+                } else if (mode === 'inventory') {
+                    $('#report-title').text('T\u1ed3n kho nguy\u00ean li\u1ec7u');
+                    $('#report-subtitle').text('Nguy\u00ean li\u1ec7u \u0111\u1ea1t ho\u1eb7c d\u01b0\u1edbi ng\u01b0\u1ee1ng t\u1ed1i thi\u1ec3u');
+                    renderInventoryTable();
+                } else {
+                    $('#report-title').text('L\u1ecbch s\u1eed tr\u1eeb kho');
+                    $('#report-subtitle').text('Nh\u1eadt k\u00fd bi\u1ebfn \u0111\u1ed9ng nguy\u00ean li\u1ec7u theo kho\u1ea3ng ng\u00e0y');
+                    loadInventoryHistory();
+                }
+            }
+
+            const today = localDate(new Date());
+            $('#report-from, #report-to').val(today);
+            $('.report-shortcuts').on('click', '.report-shortcut', function () {
+                selectReport($(this).data('report'));
+            });
+            $('#reload-report').on('click', function () {
+                loadInventory();
+                if (reportMode === 'revenue') loadRevenue();
+                else if (reportMode === 'best-sellers') loadBestSellers();
+                else if (reportMode === 'inventory-history') loadInventoryHistory();
+            });
+            $('#report-from, #report-to').on('change', function () {
+                if (reportMode === 'revenue') loadRevenue();
+                else if (reportMode === 'best-sellers') loadBestSellers();
+                else if (reportMode === 'inventory-history') loadInventoryHistory();
+            });
+
+            loadRevenue();
+            loadInventory();
+        });
+    </script>
+}

@@ -5,7 +5,7 @@ using UshiMania.Models;
 
 namespace UshiMania.Controllers;
 
-[Route("api/[controller]/[action]")]
+[Route("[controller]/[action]")]
 public sealed class RestaurantApiController : Controller
 {
     private readonly BanAnBLL banAnBLL;
@@ -30,7 +30,7 @@ public sealed class RestaurantApiController : Controller
         try
         {
             var data = banAnBLL.GetAllTables();
-            return Json(new { success = true, message = "L?y danh s�ch b�n th�nh c�ng.", data });
+            return Json(new { success = true, message = "Lấy danh sách bàn thành công.", data });
         }
         catch (Exception exception)
         {
@@ -45,14 +45,14 @@ public sealed class RestaurantApiController : Controller
         {
             if (request is null)
             {
-                return Json(new { success = false, message = "Thi?u d? li?u b�n.", data = (object?)null });
+                return Json(new { success = false, message = "Thiếu dữ liệu bàn.", data = (object?)null });
             }
 
             var updated = banAnBLL.ChangeTableStatus(request.MaBan, request.TrangThai);
             return Json(new
             {
                 success = updated,
-                message = updated ? "C?p nh?t tr?ng th�i b�n th�nh c�ng." : "Kh�ng t�m th?y b�n ho?c b�n ch?a th? chuy?n v? tr?ng th�i y�u c?u.",
+                message = updated ? "Cập nhật trạng thái bàn thành công." : "Không tìm thấy bàn hoặc bàn chưa thể chuyển về trạng thái yêu cầu.",
                 data = updated
             });
         }
@@ -69,23 +69,23 @@ public sealed class RestaurantApiController : Controller
         {
             if (request is null)
             {
-                return Json(new { success = false, message = "Thi?u d? li?u ??n h�ng.", data = (object?)null });
+                return Json(new { success = false, message = "Thiếu dữ liệu đơn hàng.", data = (object?)null });
             }
 
             var hasMenuItem = request.MaMonAn.HasValue || request.SoLuong.HasValue;
             if (hasMenuItem && (!request.MaMonAn.HasValue || !request.SoLuong.HasValue))
             {
-                return Json(new { success = false, message = "C?n cung c?p c? m� m�n v� s? l??ng.", data = (object?)null });
+                return Json(new { success = false, message = "Cần cung cấp cả mã món và số lượng.", data = (object?)null });
             }
 
             if (request.MaDonHang.HasValue && request.MaDonHang.Value <= 0)
             {
-                return Json(new { success = false, message = "M� ??n h�ng kh�ng h?p l?.", data = (object?)null });
+                return Json(new { success = false, message = "Mã đơn hàng không hợp lệ.", data = (object?)null });
             }
 
             if (request.MaDonHang.HasValue && !hasMenuItem)
             {
-                return Json(new { success = false, message = "C?n cung c?p m�n v� s? l??ng ?? c?p nh?t ??n h�ng.", data = (object?)null });
+                return Json(new { success = false, message = "Cần cung cấp món và số lượng để cập nhật đơn hàng.", data = (object?)null });
             }
 
             int orderId;
@@ -94,13 +94,13 @@ public sealed class RestaurantApiController : Controller
             {
                 if (!request.MaBan.HasValue)
                 {
-                    return Json(new { success = false, message = "C?n cung c?p m� b�n ?? t?o ??n h�ng.", data = (object?)null });
+                    return Json(new { success = false, message = "Cần cung cấp mã bàn để tạo đơn hàng.", data = (object?)null });
                 }
 
                 var newOrderId = orderBLL.CreateOrder(request.MaBan.Value, request.MaNhanVien);
                 if (!newOrderId.HasValue)
                 {
-                    return Json(new { success = false, message = "Kh�ng th? t?o ??n h�ng cho b�n n�y.", data = (object?)null });
+                    return Json(new { success = false, message = "Không thể tạo đơn hàng cho bàn này.", data = (object?)null });
                 }
 
                 orderId = newOrderId.Value;
@@ -119,7 +119,7 @@ public sealed class RestaurantApiController : Controller
                     return Json(new
                     {
                         success = false,
-                        message = created ? "??n ?� ???c t?o nh?ng kh�ng th? th�m m�n." : "Kh�ng th? th�m m�n v�o ??n h�ng.",
+                        message = created ? "Đơn đã được tạo nhưng không thể thêm món." : "Không thể thêm món vào đơn hàng.",
                         data = new { maDonHang = orderId }
                     });
                 }
@@ -128,7 +128,7 @@ public sealed class RestaurantApiController : Controller
             return Json(new
             {
                 success = true,
-                message = created ? "T?o ??n h�ng th�nh c�ng." : "C?p nh?t ??n h�ng th�nh c�ng.",
+                message = created ? "Tạo đơn hàng thành công." : "Cập nhật đơn hàng thành công.",
                 data = new { maDonHang = orderId, maChiTiet = detailId }
             });
         }
@@ -139,12 +139,45 @@ public sealed class RestaurantApiController : Controller
     }
 
     [HttpGet]
+    public IActionResult GetDanhMucMonAn()
+    {
+        try
+        {
+            var data = orderBLL.GetMenuCategories();
+            return Json(new { success = true, message = "Lấy danh mục món thành công.", data });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(GetDanhMucMonAn));
+        }
+    }
+
+    [HttpGet]
+    public IActionResult GetOrderPOS([FromQuery] int maBan)
+    {
+        try
+        {
+            var data = orderBLL.GetOpenOrderForTable(maBan);
+            return Json(new
+            {
+                success = true,
+                message = data is null ? "Bàn chưa có đơn đang mở." : "Lấy order thành công.",
+                data
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(GetOrderPOS));
+        }
+    }
+
+    [HttpGet]
     public IActionResult GetDanhSachMonBep()
     {
         try
         {
             var data = orderBLL.GetKitchenItems();
-            return Json(new { success = true, message = "L?y danh s�ch m�n b?p th�nh c�ng.", data });
+            return Json(new { success = true, message = "Lấy danh sách món bếp thành công.", data });
         }
         catch (Exception exception)
         {
@@ -159,14 +192,14 @@ public sealed class RestaurantApiController : Controller
         {
             if (request is null)
             {
-                return Json(new { success = false, message = "Thi?u d? li?u ti?n ?? b?p.", data = (object?)null });
+                return Json(new { success = false, message = "Thiếu dữ liệu tiến độ bếp.", data = (object?)null });
             }
 
             var updated = orderBLL.UpdateKitchenProgress(request.MaChiTiet, request.TienDoBep);
             return Json(new
             {
                 success = updated,
-                message = updated ? "C?p nh?t ti?n ?? b?p th�nh c�ng." : "Kh�ng t�m th?y m�n thu?c ??n h�ng ?ang m?.",
+                message = updated ? "Cập nhật tiến độ bếp thành công." : "Không tìm thấy món thuộc đơn hàng đang mở.",
                 data = updated
             });
         }
@@ -183,7 +216,7 @@ public sealed class RestaurantApiController : Controller
         {
             if (request is null)
             {
-                return Json(new { success = false, message = "Thi?u d? li?u thanh to�n.", data = (object?)null });
+                return Json(new { success = false, message = "Thiếu dữ liệu thanh toán.", data = (object?)null });
             }
 
             var paid = hoaDonKhoBLL.ThanhToanVaTruKho(
@@ -195,7 +228,7 @@ public sealed class RestaurantApiController : Controller
             return Json(new
             {
                 success = paid,
-                message = paid ? "Thanh to�n v� tr? kho th�nh c�ng." : "Kh�ng th? thanh to�n: ??n kh�ng h?p l?, ch?a c� m�n ho?c t?n kho kh�ng ??.",
+                message = paid ? "Thanh toán và trừ kho thành công." : "Không thể thanh toán: đơn không hợp lệ, chưa có món hoặc tồn kho không đủ.",
                 data = paid
             });
         }
@@ -211,7 +244,7 @@ public sealed class RestaurantApiController : Controller
         try
         {
             var data = thongKeBLL.GetCanhBaoTonKho();
-            return Json(new { success = true, message = "L?y c?nh b�o t?n kho th�nh c�ng.", data });
+            return Json(new { success = true, message = "Lấy cảnh báo tồn kho thành công.", data });
         }
         catch (Exception exception)
         {
@@ -220,16 +253,47 @@ public sealed class RestaurantApiController : Controller
     }
 
     [HttpGet]
-    public IActionResult GetBaoCaoDoanhThu([FromQuery] DateTime? tuNgay, [FromQuery] DateTime? denNgay)
+    public IActionResult GetBaoCaoDoanhThu(
+        [FromQuery] DateTime? tuNgay,
+        [FromQuery] DateTime? denNgay,
+        [FromQuery] bool theoGio = false)
     {
         try
         {
-            var data = thongKeBLL.GetBaoCaoDoanhThu(tuNgay, denNgay);
-            return Json(new { success = true, message = "L?y b�o c�o doanh thu th�nh c�ng.", data });
+            var data = thongKeBLL.GetBaoCaoDoanhThu(tuNgay, denNgay, theoGio);
+            return Json(new { success = true, message = "Lấy báo cáo doanh thu thành công.", data });
         }
         catch (Exception exception)
         {
             return HandleError(exception, nameof(GetBaoCaoDoanhThu));
+        }
+    }
+
+    [HttpGet]
+    public IActionResult GetMonBanChay([FromQuery] DateTime? tuNgay, [FromQuery] DateTime? denNgay)
+    {
+        try
+        {
+            var data = thongKeBLL.GetMonBanChay(tuNgay, denNgay);
+            return Json(new { success = true, message = "Lấy báo cáo món bán chạy thành công.", data });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(GetMonBanChay));
+        }
+    }
+
+    [HttpGet]
+    public IActionResult GetLichSuTruKho([FromQuery] DateTime? tuNgay, [FromQuery] DateTime? denNgay)
+    {
+        try
+        {
+            var data = thongKeBLL.GetLichSuTruKho(tuNgay, denNgay);
+            return Json(new { success = true, message = "Lấy lịch sử trừ kho thành công.", data });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(GetLichSuTruKho));
         }
     }
 
@@ -240,7 +304,7 @@ public sealed class RestaurantApiController : Controller
         return Json(new
         {
             success = false,
-            message = exception is ArgumentException ? exception.Message : "?� x?y ra l?i khi x? l� y�u c?u.",
+            message = exception is ArgumentException ? exception.Message : "Đã xảy ra lỗi khi xử lý yêu cầu.",
             data = (object?)null
         });
     }
