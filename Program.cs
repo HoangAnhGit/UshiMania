@@ -2,6 +2,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<UshiMania.DAL.DbHelper>();
+builder.Services.AddScoped<UshiMania.DAL.BanAnDAL>();
+builder.Services.AddScoped<UshiMania.BLL.BanAnBLL>();
+builder.Services.AddScoped<UshiMania.DAL.OrderDAL>();
+builder.Services.AddScoped<UshiMania.BLL.OrderBLL>();
+builder.Services.AddScoped<UshiMania.DAL.HoaDonKhoDAL>();
+builder.Services.AddScoped<UshiMania.BLL.HoaDonKhoBLL>();
 
 var app = builder.Build();
 
