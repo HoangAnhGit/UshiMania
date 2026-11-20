@@ -264,10 +264,45 @@
                 hubConnection.start().catch(() => {});
             }
 
+            let lastClickedTableId = null;
+            let lastClickTime = 0;
+
+            function goToOrderPOS(tableId) {
+                if (tableId) {
+                    window.location.href = `/Home/OrderPOS?maBan=${tableId}`;
+                }
+            }
+
             $('#table-grid').on('click', '.table-card', function (event) {
                 if ($(event.target).closest('.table-qr-button').length) return;
-                selectedTableId = Number($(this).attr('data-table-id'));
-                renderTables();
+                const clickedId = Number($(this).attr('data-table-id'));
+                const now = Date.now();
+
+                // Kiểm tra bấm 2 lần liên tiếp (trong vòng 500ms) để chuyển sang màn hình Order của bàn đó
+                if (lastClickedTableId === clickedId && (now - lastClickTime) < 500) {
+                    goToOrderPOS(clickedId);
+                    return;
+                }
+
+                lastClickedTableId = clickedId;
+                lastClickTime = now;
+                selectedTableId = clickedId;
+
+                // Cập nhật giao diện chọn bàn
+                $('#table-grid .table-card').each(function () {
+                    const isSelected = Number($(this).attr('data-table-id')) === selectedTableId;
+                    $(this).toggleClass('table-selected', isSelected).attr('aria-pressed', isSelected);
+                });
+                const selected = tables.find(table => Number(tableId(table)) === Number(selectedTableId));
+                $('#selected-table-label').text(selected ? `Đã chọn ${tableNumber(selected)}` : 'Chưa chọn bàn');
+                if (selected) $('#status-select').val(normalizeStatus(readValue(selected, 'trangThai', 'TrangThai')) || 'TRONG');
+            });
+
+            // Bắt sự kiện double-click chuẩn trình duyệt
+            $('#table-grid').on('dblclick', '.table-card', function (event) {
+                if ($(event.target).closest('.table-qr-button').length) return;
+                const clickedId = Number($(this).attr('data-table-id'));
+                goToOrderPOS(clickedId);
             });
 
             $('#table-grid').on('keydown', '.table-card', function (event) {

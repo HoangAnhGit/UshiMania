@@ -546,7 +546,15 @@
                         }
                         tables = response.data || [];
                         const select = $('#order-table-select');
-                        const selected = select.val();
+                        let selected = select.val();
+
+                        // Nếu có tham số maBan từ URL (ví dụ chuyển từ Sơ đồ bàn sang) và dropdown chưa chọn
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const paramMaBan = urlParams.get('maBan');
+                        if (!selected && paramMaBan) {
+                            selected = paramMaBan;
+                        }
+
                         select.empty().append($('<option value="">').text('-- Chọn bàn --'));
                         tables.forEach(table => {
                             const id = readValue(table, 'maBan', 'MaBan');
@@ -565,6 +573,11 @@
             }
 
             function resetToDefaultScreen() {
+                // Xóa param maBan trên URL nếu có
+                if (window.location.search) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+
                 currentOrder = null;
                 draftItems = [];
                 activeSelection = null;
