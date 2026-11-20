@@ -29,3 +29,21 @@ public sealed class ThanhToanVaTruKhoRequest
     public string HinhThucTra { get; set; } = string.Empty;
     public decimal TienGiamGia { get; set; }
 }
+
+public sealed class ChuyenBanRequest
+{
+    public int MaBanNguon { get; set; }
+    public int MaBanDich { get; set; }
+}
+
+public sealed class GopBanRequest
+{
+    public int MaBanNguon { get; set; }
+    public int MaBanDich { get; set; }
+}
+
+public sealed class CapNhatSoLuongChiTietRequest
+{
+    public int MaChiTiet { get; set; }
+    public int SoLuong { get; set; }
+}

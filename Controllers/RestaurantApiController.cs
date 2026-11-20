@@ -79,6 +79,153 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
+    [HttpPost("tables/transfer")]
+    public async Task<IActionResult> ChuyenBan([FromBody] ChuyenBanRequest? request)
+    {
+        try
+        {
+            if (request is null || request.MaBanNguon <= 0 || request.MaBanDich <= 0 || request.MaBanNguon == request.MaBanDich)
+            {
+                return Json(new { success = false, message = "Bàn chuyển và bàn nhận không hợp lệ.", data = (object?)null });
+            }
+
+            var result = banAnBLL.TransferTable(request.MaBanNguon, request.MaBanDich);
+            if (result)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "table-status",
+                    sourceTableId = request.MaBanNguon,
+                    targetTableId = request.MaBanDich
+                });
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "order-updated"
+                });
+            }
+
+            return Json(new
+            {
+                success = result,
+                message = result ? "Chuyển bàn thành công." : "Không thể chuyển bàn. Bàn nguồn chưa có đơn hoặc bàn đích đã có người ngồi / đã đặt.",
+                data = result
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(ChuyenBan));
+        }
+    }
+
+    [HttpPost("tables/merge")]
+    public async Task<IActionResult> GopBan([FromBody] GopBanRequest? request)
+    {
+        try
+        {
+            if (request is null || request.MaBanNguon <= 0 || request.MaBanDich <= 0 || request.MaBanNguon == request.MaBanDich)
+            {
+                return Json(new { success = false, message = "Bàn gộp và bàn đích không hợp lệ.", data = (object?)null });
+            }
+
+            var result = banAnBLL.MergeTables(request.MaBanNguon, request.MaBanDich);
+            if (result)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "table-status",
+                    sourceTableId = request.MaBanNguon,
+                    targetTableId = request.MaBanDich
+                });
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "order-updated"
+                });
+            }
+
+            return Json(new
+            {
+                success = result,
+                message = result ? "Gộp bàn thành công." : "Không thể gộp bàn. Vui lòng kiểm tra lại đơn hàng của hai bàn.",
+                data = result
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(GopBan));
+        }
+    }
+
+    [HttpDelete("orders/items/{maChiTiet:int}")]
+    public async Task<IActionResult> XoaMonKhoiOrder([FromRoute] int maChiTiet)
+    {
+        try
+        {
+            var result = orderBLL.RemoveItem(maChiTiet);
+            if (result)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "order-updated",
+                    detailId = maChiTiet
+                });
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "kitchen-progress",
+                    detailId = maChiTiet
+                });
+            }
+
+            return Json(new
+            {
+                success = result,
+                message = result ? "Đã xóa món khỏi đơn hàng." : "Không thể xóa: món đã được bếp chế biến hoặc đơn không còn mở.",
+                data = result
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(XoaMonKhoiOrder));
+        }
+    }
+
+    [HttpPut("orders/items/{maChiTiet:int}/quantity")]
+    public async Task<IActionResult> CapNhatSoLuongMon([FromRoute] int maChiTiet, [FromBody] CapNhatSoLuongChiTietRequest? request)
+    {
+        try
+        {
+            if (request is null)
+            {
+                return Json(new { success = false, message = "Thiếu dữ liệu số lượng.", data = (object?)null });
+            }
+
+            var result = orderBLL.UpdateItemQuantity(maChiTiet, request.SoLuong);
+            if (result)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "order-updated",
+                    detailId = maChiTiet
+                });
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "kitchen-progress",
+                    detailId = maChiTiet
+                });
+            }
+
+            return Json(new
+            {
+                success = result,
+                message = result ? "Cập nhật số lượng món thành công." : "Không thể cập nhật: món đã được bếp chế biến hoặc đơn không còn mở.",
+                data = result
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(CapNhatSoLuongMon));
+        }
+    }
+
     [HttpPost("orders")]
     public async Task<IActionResult> TaoHoacCapNhatOrder([FromBody] TaoHoacCapNhatOrderRequest? request)
     {
@@ -124,7 +271,7 @@ public sealed class RestaurantApiController : Controller
             }
             else
             {
-                orderId = request.MaDonHang.Value;
+                orderId = request.MaDonHang!.Value;
             }
 
             int? detailId = null;

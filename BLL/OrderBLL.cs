@@ -126,4 +126,24 @@ public sealed class OrderBLL
 
         return orderDAL.UpdateKitchenProgress(detailId, progress);
     }
+
+    public bool RemoveItem(int detailId)
+    {
+        if (detailId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(detailId), "Order detail ID must be positive.");
+        }
+
+        return orderDAL.RemoveItem(detailId);
+    }
+
+    public bool UpdateItemQuantity(int detailId, int newQuantity)
+    {
+        if (detailId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(detailId), "Order detail ID must be positive.");
+        }
+
+        return orderDAL.UpdateItemQuantity(detailId, newQuantity);
+    }
 }

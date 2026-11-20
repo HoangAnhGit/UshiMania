@@ -73,7 +73,7 @@ public sealed class BanAnDAL
         return command.ExecuteNonQuery() == 1;
     }
 
-    public bool MergeOrTransfer(int sourceTableId, int targetTableId)
+    public bool TransferTable(int sourceTableId, int targetTableId)
     {
         using var connection = dbHelper.CreateConnection();
         connection.Open();
@@ -110,6 +110,25 @@ public sealed class BanAnDAL
             {
                 transaction.Rollback();
                 return false;
+            }
+
+            // Kiểm tra bàn đích xem có đơn đang mở không - Chuyển bàn chỉ chuyển sang bàn chưa có đơn
+            const string checkTargetOrderSql = """
+                SELECT COUNT(1)
+                FROM don_hang WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_ban = @target_id
+                  AND trang_thai_don = @trang_thai_don;
+                """;
+
+            using (var checkCmd = dbHelper.CreateCommand(connection, checkTargetOrderSql, transaction))
+            {
+                checkCmd.Parameters.AddWithValue("@target_id", targetTableId);
+                checkCmd.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+                {
+                    transaction.Rollback();
+                    return false; // Bàn đích đã có đơn hàng, vui lòng dùng chức năng Gộp bàn!
+                }
             }
 
             const string moveOrdersSql = """
@@ -158,5 +177,175 @@ public sealed class BanAnDAL
             transaction.Rollback();
             throw;
         }
+    }
+
+    public bool MergeTables(int sourceTableId, int targetTableId)
+    {
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+
+        try
+        {
+            const string lockSql = """
+                SELECT ma_ban, trang_thai
+                FROM ban_an WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_ban IN (@source_id, @target_id)
+                ORDER BY ma_ban;
+                """;
+
+            var foundTableIds = new HashSet<int>();
+            string? targetStatus = null;
+            using (var lockCommand = dbHelper.CreateCommand(connection, lockSql, transaction))
+            {
+                lockCommand.Parameters.AddWithValue("@source_id", sourceTableId);
+                lockCommand.Parameters.AddWithValue("@target_id", targetTableId);
+                using var reader = lockCommand.ExecuteReader();
+                while (reader.Read())
+                {
+                    var tableId = reader.GetInt32(0);
+                    foundTableIds.Add(tableId);
+                    if (tableId == targetTableId)
+                    {
+                        targetStatus = reader.IsDBNull(1) ? null : reader.GetString(1);
+                    }
+                }
+            }
+
+            if (foundTableIds.Count != 2 || targetStatus is "DA_DAT" or "CHO_THANH_TOAN")
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            // Lấy mã đơn hàng nguồn
+            const string getSourceOrderSql = """
+                SELECT TOP (1) ma_don_hang
+                FROM don_hang WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_ban = @source_id
+                  AND trang_thai_don = @trang_thai_don;
+                """;
+
+            int? sourceOrderId = null;
+            using (var getSourceCmd = dbHelper.CreateCommand(connection, getSourceOrderSql, transaction))
+            {
+                getSourceCmd.Parameters.AddWithValue("@source_id", sourceTableId);
+                getSourceCmd.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                var val = getSourceCmd.ExecuteScalar();
+                if (val != null && val != DBNull.Value)
+                {
+                    sourceOrderId = Convert.ToInt32(val);
+                }
+            }
+
+            if (sourceOrderId == null)
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            // Lấy mã đơn hàng đích nếu có
+            const string getTargetOrderSql = """
+                SELECT TOP (1) ma_don_hang
+                FROM don_hang WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_ban = @target_id
+                  AND trang_thai_don = @trang_thai_don;
+                """;
+
+            int? targetOrderId = null;
+            using (var getTargetCmd = dbHelper.CreateCommand(connection, getTargetOrderSql, transaction))
+            {
+                getTargetCmd.Parameters.AddWithValue("@target_id", targetTableId);
+                getTargetCmd.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                var val = getTargetCmd.ExecuteScalar();
+                if (val != null && val != DBNull.Value)
+                {
+                    targetOrderId = Convert.ToInt32(val);
+                }
+            }
+
+            if (targetOrderId == null)
+            {
+                // Bàn đích chưa có đơn: chuyển toàn bộ đơn hàng sang bàn đích
+                const string moveOrderSql = """
+                    UPDATE don_hang
+                    SET ma_ban = @target_id
+                    WHERE ma_don_hang = @source_order_id;
+                    """;
+                using var moveCmd = dbHelper.CreateCommand(connection, moveOrderSql, transaction);
+                moveCmd.Parameters.AddWithValue("@target_id", targetTableId);
+                moveCmd.Parameters.AddWithValue("@source_order_id", sourceOrderId.Value);
+                moveCmd.ExecuteNonQuery();
+            }
+            else
+            {
+                // Bàn đích đã có đơn: chuyển toàn bộ chi tiết món từ đơn nguồn sang đơn đích
+                const string moveItemsSql = """
+                    UPDATE chi_tiet_don_hang
+                    SET ma_don_hang = @target_order_id
+                    WHERE ma_don_hang = @source_order_id;
+                    """;
+                using (var moveItemsCmd = dbHelper.CreateCommand(connection, moveItemsSql, transaction))
+                {
+                    moveItemsCmd.Parameters.AddWithValue("@target_order_id", targetOrderId.Value);
+                    moveItemsCmd.Parameters.AddWithValue("@source_order_id", sourceOrderId.Value);
+                    moveItemsCmd.ExecuteNonQuery();
+                }
+
+                // Cập nhật lại tổng tiền tạm cho đơn đích
+                const string updateTargetTotalSql = """
+                    UPDATE don_hang
+                    SET tong_tien_tam = (
+                        SELECT ISNULL(SUM(so_luong * don_gia_luc_goi), 0)
+                        FROM chi_tiet_don_hang
+                        WHERE ma_don_hang = @target_order_id
+                    )
+                    WHERE ma_don_hang = @target_order_id;
+                    """;
+                using (var upTargetCmd = dbHelper.CreateCommand(connection, updateTargetTotalSql, transaction))
+                {
+                    upTargetCmd.Parameters.AddWithValue("@target_order_id", targetOrderId.Value);
+                    upTargetCmd.ExecuteNonQuery();
+                }
+
+                // Xóa đơn hàng nguồn đã rỗng
+                const string deleteSourceOrderSql = "DELETE FROM don_hang WHERE ma_don_hang = @source_order_id;";
+                using (var delSourceCmd = dbHelper.CreateCommand(connection, deleteSourceOrderSql, transaction))
+                {
+                    delSourceCmd.Parameters.AddWithValue("@source_order_id", sourceOrderId.Value);
+                    delSourceCmd.ExecuteNonQuery();
+                }
+            }
+
+            // Cập nhật trạng thái 2 bàn
+            const string updateTablesSql = """
+                UPDATE ban_an
+                SET trang_thai = CASE
+                    WHEN ma_ban = @source_id THEN N'TRONG'
+                    ELSE N'DANG_PHUC_VU'
+                END
+                WHERE ma_ban IN (@source_id, @target_id);
+                """;
+
+            using (var updateTablesCommand = dbHelper.CreateCommand(connection, updateTablesSql, transaction))
+            {
+                updateTablesCommand.Parameters.AddWithValue("@source_id", sourceTableId);
+                updateTablesCommand.Parameters.AddWithValue("@target_id", targetTableId);
+                updateTablesCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            return true;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public bool MergeOrTransfer(int sourceTableId, int targetTableId)
+    {
+        return MergeTables(sourceTableId, targetTableId);
     }
 }

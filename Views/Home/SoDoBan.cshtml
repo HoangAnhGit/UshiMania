@@ -100,6 +100,56 @@
     </section>
 </div>
 
+<!-- Modal Chuyển bàn -->
+<div id="transfer-modal" class="pos-overlay" hidden>
+    <div class="modal-dialog-card">
+        <header class="modal-dialog-header">
+            <h3><i class="bi bi-arrow-left-right"></i> Chuyển bàn</h3>
+            <button type="button" class="modal-dialog-close" data-close-transfer>&times;</button>
+        </header>
+        <div class="modal-dialog-body">
+            <div class="modal-field">
+                <label>Bàn chuyển (Hiện tại):</label>
+                <input type="text" id="transfer-source-name" class="form-control" readonly />
+            </div>
+            <div class="modal-field">
+                <label for="transfer-target-select">Chọn bàn nhận:</label>
+                <select id="transfer-target-select" class="form-select"></select>
+            </div>
+            <p class="modal-hint">Toàn bộ món và đơn hàng của bàn hiện tại sẽ được chuyển sang bàn nhận.</p>
+        </div>
+        <footer class="modal-dialog-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-close-transfer>Hủy</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-confirm-transfer">Xác nhận chuyển bàn</button>
+        </footer>
+    </div>
+</div>
+
+<!-- Modal Gộp bàn -->
+<div id="merge-modal" class="pos-overlay" hidden>
+    <div class="modal-dialog-card">
+        <header class="modal-dialog-header">
+            <h3><i class="bi bi-intersect"></i> Gộp bàn</h3>
+            <button type="button" class="modal-dialog-close" data-close-merge>&times;</button>
+        </header>
+        <div class="modal-dialog-body">
+            <div class="modal-field">
+                <label>Bàn cần gộp (Nguồn):</label>
+                <input type="text" id="merge-source-name" class="form-control" readonly />
+            </div>
+            <div class="modal-field">
+                <label for="merge-target-select">Gộp vào bàn (Đích):</label>
+                <select id="merge-target-select" class="form-select"></select>
+            </div>
+            <p class="modal-hint">Tất cả các món của bàn nguồn sẽ được dồn vào bàn đích và bàn nguồn sẽ chuyển về trạng thái Trống.</p>
+        </div>
+        <footer class="modal-dialog-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-close-merge>Hủy</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-confirm-merge">Xác nhận gộp bàn</button>
+        </footer>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(function () {
@@ -313,8 +363,109 @@
                 });
             });
 
-            $('#transfer-table, #merge-table').on('click', function () {
-                showMessage('Chức năng này cần action chuyển/gộp bàn trên API.', true);
+            // --- XỬ LÝ CHUYỂN BÀN & GỘP BÀN TRONG SƠ ĐỒ BÀN ---
+            $('#transfer-table').on('click', function () {
+                if (!selectedTableId) {
+                    showMessage('Vui lòng chọn bàn cần chuyển trên sơ đồ.', true);
+                    return;
+                }
+                const currentTable = tables.find(t => Number(tableId(t)) === selectedTableId);
+                const tableName = currentTable ? `${tableNumber(currentTable)} (${tableArea(currentTable)})` : `Bàn ${selectedTableId}`;
+                $('#transfer-source-name').val(tableName);
+
+                const select = $('#transfer-target-select').empty();
+                const availableTables = tables.filter(t => Number(tableId(t)) !== selectedTableId);
+                if (!availableTables.length) {
+                    showMessage('Không có bàn nào khác để chuyển.', true);
+                    return;
+                }
+                availableTables.forEach(t => {
+                    const id = tableId(t);
+                    const status = normalizeStatus(readValue(t, 'trangThai', 'TrangThai'));
+                    const statusStr = statusLabel(status);
+                    select.append($('<option>').val(id).text(`${tableNumber(t)} - ${tableArea(t)} [${statusStr}]`));
+                });
+                $('#transfer-modal').prop('hidden', false);
+            });
+
+            $('[data-close-transfer]').on('click', () => $('#transfer-modal').prop('hidden', true));
+
+            $('#btn-confirm-transfer').on('click', function () {
+                const sourceId = selectedTableId;
+                const targetId = Number($('#transfer-target-select').val());
+                if (!sourceId || !targetId || sourceId === targetId) {
+                    showMessage('Vui lòng chọn bàn nhận hợp lệ.', true);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/restaurant/tables/transfer',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maBanNguon: sourceId, maBanDich: targetId })
+                }).done(response => {
+                    if (!response?.success) {
+                        showMessage(response?.message || 'Chuyển bàn thất bại.', true);
+                        return;
+                    }
+                    $('#transfer-modal').prop('hidden', true);
+                    showMessage('Chuyển bàn thành công!');
+                    selectedTableId = targetId;
+                    loadTables();
+                }).fail(xhr => showMessage(xhr.responseJSON?.message || 'Chuyển bàn thất bại.', true));
+            });
+
+            $('#merge-table').on('click', function () {
+                if (!selectedTableId) {
+                    showMessage('Vui lòng chọn bàn cần gộp trên sơ đồ.', true);
+                    return;
+                }
+                const currentTable = tables.find(t => Number(tableId(t)) === selectedTableId);
+                const tableName = currentTable ? `${tableNumber(currentTable)} (${tableArea(currentTable)})` : `Bàn ${selectedTableId}`;
+                $('#merge-source-name').val(tableName);
+
+                const select = $('#merge-target-select').empty();
+                const availableTables = tables.filter(t => Number(tableId(t)) !== selectedTableId);
+                if (!availableTables.length) {
+                    showMessage('Không có bàn nào khác để gộp.', true);
+                    return;
+                }
+                availableTables.forEach(t => {
+                    const id = tableId(t);
+                    const status = normalizeStatus(readValue(t, 'trangThai', 'TrangThai'));
+                    const statusStr = statusLabel(status);
+                    select.append($('<option>').val(id).text(`${tableNumber(t)} - ${tableArea(t)} [${statusStr}]`));
+                });
+                $('#merge-modal').prop('hidden', false);
+            });
+
+            $('[data-close-merge]').on('click', () => $('#merge-modal').prop('hidden', true));
+
+            $('#btn-confirm-merge').on('click', function () {
+                const sourceId = selectedTableId;
+                const targetId = Number($('#merge-target-select').val());
+                if (!sourceId || !targetId || sourceId === targetId) {
+                    showMessage('Vui lòng chọn bàn đích hợp lệ.', true);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/restaurant/tables/merge',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maBanNguon: sourceId, maBanDich: targetId })
+                }).done(response => {
+                    if (!response?.success) {
+                        showMessage(response?.message || 'Gộp bàn thất bại.', true);
+                        return;
+                    }
+                    $('#merge-modal').prop('hidden', true);
+                    showMessage('Gộp bàn thành công!');
+                    selectedTableId = targetId;
+                    loadTables();
+                }).fail(xhr => showMessage(xhr.responseJSON?.message || 'Gộp bàn thất bại.', true));
             });
 
             loadTables();

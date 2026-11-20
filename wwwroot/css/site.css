@@ -1041,3 +1041,185 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* POS Order lines interactive buttons and badges */
+.order-line {
+  padding: 8px 6px;
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 6px;
+  transition: background-color .15s ease;
+  cursor: pointer;
+}
+.order-line:hover {
+  background-color: #f8f9fa;
+}
+.order-line.active-line {
+  background-color: #e7f1ff;
+  border-left: 3px solid #0d6efd;
+}
+.order-line-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.order-line-name-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.order-line-name {
+  font-weight: 700;
+  font-size: .88rem;
+  color: #212529;
+}
+.pos-badge {
+  font-size: .7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+.pos-badge-draft {
+  background: #cfe2ff;
+  color: #084298;
+}
+.pos-badge-cho-nau {
+  background: #fff3cd;
+  color: #664d03;
+}
+.pos-badge-dang-nau {
+  background: #cff4fc;
+  color: #055160;
+}
+.pos-badge-da-xong {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+.order-line-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+.order-line-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-qty-pos {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #ced4da;
+  background: #fff;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: .85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #495057;
+  cursor: pointer;
+}
+.btn-qty-pos:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+.btn-qty-pos:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+.qty-display-pos {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  font-size: .88rem;
+}
+.btn-del-pos {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid #f5c2c7;
+  background: #f8d7da;
+  color: #842029;
+  border-radius: 4px;
+  font-weight: 700;
+  font-size: .85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 4px;
+}
+.btn-del-pos:hover:not(:disabled) {
+  background: #dc3545;
+  color: #fff;
+}
+.btn-del-pos:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+
+/* Modal Chuyển/Gộp bàn */
+.modal-dialog-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+  overflow: hidden;
+  animation: modalFadeIn .2s ease;
+}
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.modal-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: #0d6efd;
+  color: #fff;
+}
+.modal-dialog-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.modal-dialog-close {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: 1.4rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.modal-dialog-body {
+  padding: 18px;
+}
+.modal-field {
+  margin-bottom: 14px;
+}
+.modal-field label {
+  display: block;
+  font-size: .85rem;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 5px;
+}
+.modal-hint {
+  font-size: .8rem;
+  color: #6c757d;
+  margin-top: 10px;
+  margin-bottom: 0;
+}
+.modal-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 18px;
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+}

@@ -382,7 +382,8 @@ public sealed class OrderDAL
 
         const string detailsSql = """
             SELECT ct.ma_chi_tiet, ct.ma_mon_an, m.ten_mon_an,
-                   ct.so_luong, ct.don_gia_luc_goi, ct.ghi_chu_mon
+                   ct.so_luong, ct.don_gia_luc_goi, ct.ghi_chu_mon,
+                   COALESCE(ct.tien_do_bep, 'CHO_NAU')
             FROM chi_tiet_don_hang AS ct
             INNER JOIN mon_an AS m ON m.ma_mon_an = ct.ma_mon_an
             WHERE ct.ma_don_hang = @ma_don_hang
@@ -401,7 +402,8 @@ public sealed class OrderDAL
                 TenMonAn = detailsReader.GetString(2),
                 SoLuong = detailsReader.GetInt32(3),
                 DonGia = detailsReader.GetDecimal(4),
-                GhiChuMon = detailsReader.IsDBNull(5) ? null : detailsReader.GetString(5)
+                GhiChuMon = detailsReader.IsDBNull(5) ? null : detailsReader.GetString(5),
+                TienDoBep = detailsReader.GetString(6)
             });
         }
 
@@ -466,5 +468,144 @@ public sealed class OrderDAL
         command.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
 
         return command.ExecuteNonQuery() == 1;
+    }
+
+    public bool RemoveItem(int detailId)
+    {
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+        try
+        {
+            const string checkSql = """
+                SELECT ct.ma_don_hang, COALESCE(ct.tien_do_bep, 'CHO_NAU'), d.trang_thai_don
+                FROM chi_tiet_don_hang AS ct WITH (UPDLOCK, HOLDLOCK)
+                INNER JOIN don_hang AS d WITH (UPDLOCK, HOLDLOCK) ON d.ma_don_hang = ct.ma_don_hang
+                WHERE ct.ma_chi_tiet = @ma_chi_tiet;
+                """;
+            int orderId = 0;
+            string kitchenProgress = "";
+            string orderStatus = "";
+            using (var cmd = dbHelper.CreateCommand(connection, checkSql, transaction))
+            {
+                cmd.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+                using var reader = cmd.ExecuteReader();
+                if (!reader.Read())
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+                orderId = reader.GetInt32(0);
+                kitchenProgress = reader.GetString(1);
+                orderStatus = reader.GetString(2);
+            }
+
+            if (orderStatus != OPEN_ORDER_STATUS || kitchenProgress != "CHO_NAU")
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            const string deleteSql = "DELETE FROM chi_tiet_don_hang WHERE ma_chi_tiet = @ma_chi_tiet;";
+            using (var delCmd = dbHelper.CreateCommand(connection, deleteSql, transaction))
+            {
+                delCmd.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+                delCmd.ExecuteNonQuery();
+            }
+
+            const string updateOrderSql = """
+                UPDATE don_hang
+                SET tong_tien_tam = (
+                    SELECT ISNULL(SUM(so_luong * don_gia_luc_goi), 0)
+                    FROM chi_tiet_don_hang
+                    WHERE ma_don_hang = @ma_don_hang
+                )
+                WHERE ma_don_hang = @ma_don_hang;
+                """;
+            using (var upCmd = dbHelper.CreateCommand(connection, updateOrderSql, transaction))
+            {
+                upCmd.Parameters.AddWithValue("@ma_don_hang", orderId);
+                upCmd.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            return true;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public bool UpdateItemQuantity(int detailId, int newQuantity)
+    {
+        if (newQuantity <= 0) return RemoveItem(detailId);
+
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+        try
+        {
+            const string checkSql = """
+                SELECT ct.ma_don_hang, COALESCE(ct.tien_do_bep, 'CHO_NAU'), d.trang_thai_don
+                FROM chi_tiet_don_hang AS ct WITH (UPDLOCK, HOLDLOCK)
+                INNER JOIN don_hang AS d WITH (UPDLOCK, HOLDLOCK) ON d.ma_don_hang = ct.ma_don_hang
+                WHERE ct.ma_chi_tiet = @ma_chi_tiet;
+                """;
+            int orderId = 0;
+            string kitchenProgress = "";
+            string orderStatus = "";
+            using (var cmd = dbHelper.CreateCommand(connection, checkSql, transaction))
+            {
+                cmd.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+                using var reader = cmd.ExecuteReader();
+                if (!reader.Read())
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+                orderId = reader.GetInt32(0);
+                kitchenProgress = reader.GetString(1);
+                orderStatus = reader.GetString(2);
+            }
+
+            if (orderStatus != OPEN_ORDER_STATUS || kitchenProgress != "CHO_NAU")
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            const string updateItemSql = "UPDATE chi_tiet_don_hang SET so_luong = @so_luong WHERE ma_chi_tiet = @ma_chi_tiet;";
+            using (var upItemCmd = dbHelper.CreateCommand(connection, updateItemSql, transaction))
+            {
+                upItemCmd.Parameters.AddWithValue("@so_luong", newQuantity);
+                upItemCmd.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+                upItemCmd.ExecuteNonQuery();
+            }
+
+            const string updateOrderSql = """
+                UPDATE don_hang
+                SET tong_tien_tam = (
+                    SELECT ISNULL(SUM(so_luong * don_gia_luc_goi), 0)
+                    FROM chi_tiet_don_hang
+                    WHERE ma_don_hang = @ma_don_hang
+                )
+                WHERE ma_don_hang = @ma_don_hang;
+                """;
+            using (var upCmd = dbHelper.CreateCommand(connection, updateOrderSql, transaction))
+            {
+                upCmd.Parameters.AddWithValue("@ma_don_hang", orderId);
+                upCmd.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            return true;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
     }
 }

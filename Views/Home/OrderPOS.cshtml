@@ -14,67 +14,67 @@
     <section class="order-left-column">
         <header class="order-ticket-header">
             <div class="order-table-select">
-                <label for="order-table-select">S&#7889; b&#224;n</label>
-                <select id="order-table-select"><option value="">Loading tables...</option></select>
+                <label for="order-table-select">Số bàn</label>
+                <select id="order-table-select"><option value="">Đang tải danh sách bàn...</option></select>
             </div>
             <div class="order-header-facts">
-                <div><span>Gi&#7901; m&#7903;</span><strong id="opened-at">--:--</strong></div>
-                <div><span>T&#7841;m t&#237;nh</span><strong id="subtotal-value">0</strong></div>
-                <div><span>Thu&#7871; VAT 8%</span><strong id="vat-value">0</strong></div>
-                <div><span>Gi&#7843;m gi&#225;</span><strong id="discount-value">0</strong></div>
-                <div class="ticket-total"><span>Thanh to&#225;n</span><strong id="grand-total">0</strong></div>
+                <div><span>Giờ mở</span><strong id="opened-at">--:--</strong></div>
+                <div><span>Tạm tính</span><strong id="subtotal-value">0</strong></div>
+                <div><span>Thuế VAT 8%</span><strong id="vat-value">0</strong></div>
+                <div><span>Giảm giá</span><strong id="discount-value">0</strong></div>
+                <div class="ticket-total"><span>Thanh toán</span><strong id="grand-total">0</strong></div>
             </div>
         </header>
 
         <div class="ticket-items-heading">
-            <span>M&#243;n &#273;&#227; g&#7885;i</span>
-            <span id="current-order-label">Ch&#432;a c&#243; order</span>
+            <span>Món đã gọi</span>
+            <span id="current-order-label">Chưa có đơn hàng</span>
         </div>
         <div id="order-lines" class="order-lines">
-            <div class="order-empty">Ch&#7885;n b&#224;n &#273;&#7875; xem order.</div>
+            <div class="order-empty">Chọn bàn để xem đơn hàng.</div>
         </div>
         <div class="order-note-box">
-            <label for="dish-note">Ghi ch&#250; m&#243;n &#273;ang ch&#7885;n</label>
-            <textarea id="dish-note" maxlength="200" placeholder="V&#237; d&#7909;: kh&#244;ng h&#224;nh..."></textarea>
+            <label for="dish-note">Ghi chú món đang chọn</label>
+            <textarea id="dish-note" maxlength="200" placeholder="Ví dụ: không hành, ít đá..."></textarea>
         </div>
         <div class="order-left-actions">
-            <button type="button" class="order-action-blue" id="transfer-table">Chuy&#7875;n b&#224;n</button>
-            <button type="button" class="order-action-blue" id="merge-table">G&#7897;p b&#224;n</button>
-            <button type="button" class="order-action-blue" id="discount-mode">Gi&#7843;m gi&#225;</button>
-            <button type="button" class="order-action-blue" id="note-focus">Ghi ch&#250;</button>
+            <button type="button" class="order-action-blue" id="transfer-table">Chuyển bàn</button>
+            <button type="button" class="order-action-blue" id="merge-table">Gộp bàn</button>
+            <button type="button" class="order-action-blue" id="discount-mode">Giảm giá</button>
+            <button type="button" class="order-action-blue" id="note-focus">Ghi chú</button>
         </div>
     </section>
 
     <section class="order-menu-column">
         <div class="order-menu-heading">
             <div>
-                <h1>Danh m&#7909;c &amp; m&#243;n &#259;n</h1>
-                <p id="selected-menu-item">Ch&#432;a ch&#7885;n m&#243;n</p>
+                <h1>Danh mục &amp; món ăn</h1>
+                <p id="selected-menu-item">Chưa chọn món</p>
             </div>
-            <button type="button" class="order-back-button" id="back-to-menu" hidden>Quay l&#7841;i th&#7921;c &#273;&#417;n</button>
+            <button type="button" class="order-back-button" id="back-to-menu" hidden>Quay lại thực đơn</button>
         </div>
         <div id="category-grid" class="category-grid"></div>
         <div id="menu-grid" class="menu-grid">
-            <div class="menu-empty">Loading menu...</div>
+            <div class="menu-empty">Đang tải thực đơn...</div>
         </div>
         <section id="payment-panel" class="payment-panel" hidden>
-            <h2>Ch&#7885;n h&#236;nh th&#7913;c thanh to&#225;n</h2>
+            <h2>Chọn hình thức thanh toán</h2>
             <div class="payment-method-grid">
-                <button type="button" class="payment-method" data-method="TIEN_MAT">Ti&#7873;n m&#7863;t</button>
-                <button type="button" class="payment-method" data-method="VIETQR">Chuy&#7875;n kho&#7843;n VietQR</button>
-                <button type="button" class="payment-method" data-method="THE_NGAN_HANG">C&#224; th&#7867;</button>
+                <button type="button" class="payment-method" data-method="TIEN_MAT">Tiền mặt</button>
+                <button type="button" class="payment-method" data-method="VIETQR">Chuyển khoản VietQR</button>
+                <button type="button" class="payment-method" data-method="THE_NGAN_HANG">Cà thẻ</button>
             </div>
             <div id="vietqr-box" class="vietqr-box" hidden>
-                <img id="vietqr-image" alt="VietQR payment code" />
+                <img id="vietqr-image" alt="Mã thanh toán VietQR" />
                 <div id="vietqr-caption"></div>
             </div>
-            <p id="payment-hint" class="payment-hint">Select a payment method.</p>
+            <p id="payment-hint" class="payment-hint">Vui lòng chọn phương thức thanh toán.</p>
         </section>
     </section>
 
     <aside class="order-keypad-column">
         <div class="keypad-entry-head">
-            <span id="entry-mode-label">S&#7889; l&#432;&#7907;ng</span>
+            <span id="entry-mode-label">Số lượng</span>
             <strong id="selected-quantity">1</strong>
         </div>
         <div class="order-numpad">
@@ -87,26 +87,76 @@
             <button type="button" data-digit="7">7</button>
             <button type="button" data-digit="8">8</button>
             <button type="button" data-digit="9">9</button>
-            <button type="button" class="keypad-clear" data-key="clear">X&#243;a</button>
+            <button type="button" class="keypad-clear" data-key="clear">Xóa</button>
             <button type="button" data-digit="0">0</button>
             <button type="button" class="keypad-clear" data-key="backspace">&larr;</button>
         </div>
         <div class="order-main-actions">
-            <button type="button" class="order-main-button action-blue" id="send-order">Order<br /><small>G&#7917;i b&#7871;p</small></button>
-            <button type="button" class="order-main-button action-orange" id="subtotal-preview">T&#7841;m t&#237;nh<br /><small>In bill</small></button>
-            <button type="button" class="order-main-button action-red" id="open-payment">Thanh to&#225;n</button>
+            <button type="button" class="order-main-button action-blue" id="send-order">Đặt món<br /><small>Gửi bếp</small></button>
+            <button type="button" class="order-main-button action-orange" id="subtotal-preview">Tạm tính<br /><small>In bill</small></button>
+            <button type="button" class="order-main-button action-red" id="open-payment">Thanh toán</button>
             <button type="button" class="order-main-button action-green" id="confirm-selection">&#10003;</button>
             <button type="button" class="order-main-button action-red" id="cancel-action">&times;</button>
         </div>
     </aside>
 </div>
 
+<!-- Modal Chuyển bàn -->
+<div id="transfer-modal" class="pos-overlay" hidden>
+    <div class="modal-dialog-card">
+        <header class="modal-dialog-header">
+            <h3><i class="bi bi-arrow-left-right"></i> Chuyển bàn</h3>
+            <button type="button" class="modal-dialog-close" data-close-transfer>&times;</button>
+        </header>
+        <div class="modal-dialog-body">
+            <div class="modal-field">
+                <label>Bàn chuyển (Hiện tại):</label>
+                <input type="text" id="transfer-source-name" class="form-control" readonly />
+            </div>
+            <div class="modal-field">
+                <label for="transfer-target-select">Chọn bàn nhận:</label>
+                <select id="transfer-target-select" class="form-select"></select>
+            </div>
+            <p class="modal-hint">Toàn bộ món và đơn hàng của bàn hiện tại sẽ được chuyển sang bàn nhận.</p>
+        </div>
+        <footer class="modal-dialog-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-close-transfer>Hủy</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-confirm-transfer">Xác nhận chuyển bàn</button>
+        </footer>
+    </div>
+</div>
+
+<!-- Modal Gộp bàn -->
+<div id="merge-modal" class="pos-overlay" hidden>
+    <div class="modal-dialog-card">
+        <header class="modal-dialog-header">
+            <h3><i class="bi bi-intersect"></i> Gộp bàn</h3>
+            <button type="button" class="modal-dialog-close" data-close-merge>&times;</button>
+        </header>
+        <div class="modal-dialog-body">
+            <div class="modal-field">
+                <label>Bàn cần gộp (Nguồn):</label>
+                <input type="text" id="merge-source-name" class="form-control" readonly />
+            </div>
+            <div class="modal-field">
+                <label for="merge-target-select">Gộp vào bàn (Đích):</label>
+                <select id="merge-target-select" class="form-select"></select>
+            </div>
+            <p class="modal-hint">Tất cả các món của bàn nguồn sẽ được dồn vào bàn đích và bàn nguồn sẽ chuyển về trạng thái Trống.</p>
+        </div>
+        <footer class="modal-dialog-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-close-merge>Hủy</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-confirm-merge">Xác nhận gộp bàn</button>
+        </footer>
+    </div>
+</div>
+
 <div id="receipt-overlay" class="pos-overlay" hidden>
     <section class="receipt-card">
         <button type="button" class="overlay-close" data-close-overlay>&times;</button>
-        <h2>Phi&#7871;u t&#7841;m t&#237;nh</h2>
+        <h2>Phiếu tạm tính</h2>
         <div id="receipt-content"></div>
-        <button type="button" class="receipt-print" id="print-receipt">In phi&#7871;u</button>
+        <button type="button" class="receipt-print" id="print-receipt">In phiếu</button>
     </section>
 </div>
 
@@ -125,7 +175,12 @@
             let categories = [];
             let currentOrder = null;
             let activeCategoryId = null;
-            let selectedItem = null;
+
+            // Danh sách món mới chọn tại POS (chưa gửi bếp)
+            let draftItems = [];
+            // Đối tượng đang được chọn: { type: 'draft', item } hoặc { type: 'saved', item }
+            let activeSelection = null;
+
             let quantity = '1';
             let discount = 0;
             let entryMode = 'quantity';
@@ -134,11 +189,20 @@
 
             const readValue = (obj, camel, pascal) => obj?.[camel] ?? obj?.[pascal];
             const formatMoney = value => new Intl.NumberFormat('vi-VN').format(Number(value || 0)) + ' \u20ab';
-            const subtotal = () => Number(currentOrder?.tienMonAn ?? currentOrder?.TienMonAn ?? 0);
-            const vat = () => Math.round(subtotal() * 0.08);
-            const payable = () => Math.max(0, subtotal() + vat() - discount);
             const orderId = () => readValue(currentOrder, 'maDonHang', 'MaDonHang');
             const selectedTableId = () => Number($('#order-table-select').val() || 0);
+
+            function savedSubtotal() {
+                return Number(currentOrder?.tienMonAn ?? currentOrder?.TienMonAn ?? 0);
+            }
+
+            function draftSubtotal() {
+                return draftItems.reduce((acc, it) => acc + (Number(it.donGia || 0) * Number(it.soLuong || 1)), 0);
+            }
+
+            const subtotal = () => savedSubtotal() + draftSubtotal();
+            const vat = () => Math.round(subtotal() * 0.08);
+            const payable = () => Math.max(0, subtotal() + vat() - discount);
 
             function notify(message, error = false) {
                 const toast = $('#pos-message').text(message).toggleClass('toast-error', error).addClass('toast-visible');
@@ -148,8 +212,8 @@
 
             function setEntryMode(mode) {
                 entryMode = mode;
-                $('#entry-mode-label').text(mode === 'discount' ? 'Discount amount' : 'S\u1ed1 l\u01b0\u1ee3ng');
-                $('#selected-quantity').text(mode === 'discount' ? quantity : quantity);
+                $('#entry-mode-label').text(mode === 'discount' ? 'Giảm giá' : 'Số lượng');
+                $('#selected-quantity').text(quantity);
             }
 
             function updateTotals() {
@@ -162,51 +226,229 @@
             function renderLines() {
                 const lines = readValue(currentOrder, 'chiTiet', 'ChiTiet') || [];
                 const container = $('#order-lines').empty();
-                if (!lines.length) {
-                    container.append($('<div class="order-empty">').text('No items in this order yet.'));
+
+                if (!lines.length && !draftItems.length) {
+                    container.append($('<div class="order-empty">').text(selectedTableId() ? 'Chưa có món nào trong đơn.' : 'Chọn bàn để xem đơn hàng.'));
                     return;
                 }
 
+                // 1. Hiển thị các món đã lưu từ cơ sở dữ liệu
                 lines.forEach(line => {
+                    const detailId = readValue(line, 'maChiTiet', 'MaChiTiet');
                     const name = readValue(line, 'tenMonAn', 'TenMonAn');
-                    const qty = readValue(line, 'soLuong', 'SoLuong');
+                    const qty = Number(readValue(line, 'soLuong', 'SoLuong') || 1);
                     const price = Number(readValue(line, 'donGia', 'DonGia') || 0);
                     const note = readValue(line, 'ghiChuMon', 'GhiChuMon');
+                    const kitchenStatus = String(readValue(line, 'tienDoBep', 'TienDoBep') || 'CHO_NAU').toUpperCase();
+
+                    const isChoNau = kitchenStatus === 'CHO_NAU';
+                    const isDangNau = kitchenStatus === 'DANG_NAU';
+                    const isDaXong = kitchenStatus === 'DA_XONG';
+
+                    let badgeHtml = '<span class="pos-badge pos-badge-cho-nau">Chờ nấu</span>';
+                    if (isDangNau) badgeHtml = '<span class="pos-badge pos-badge-dang-nau">Đang nấu</span>';
+                    else if (isDaXong) badgeHtml = '<span class="pos-badge pos-badge-da-xong">Đã xong</span>';
+
                     const row = $('<article class="order-line">')
-                        .append($('<div class="order-line-main">')
-                            .append($('<strong>').text(`${qty} x ${name}`))
-                            .append($('<span>').text(formatMoney(price * qty))));
-                    if (note) row.append($('<em class="order-line-note">').text(note));
+                        .toggleClass('active-line', activeSelection?.type === 'saved' && activeSelection?.item?.maChiTiet === detailId);
+
+                    const topRow = $('<div class="order-line-top">')
+                        .append($('<div class="order-line-name-badge">')
+                            .append($('<span class="order-line-name">').text(name))
+                            .append($(badgeHtml)))
+                        .append($('<strong>').text(formatMoney(price * qty)));
+
+                    const bottomRow = $('<div class="order-line-bottom">');
+                    if (note) {
+                        bottomRow.append($('<em class="order-line-note">').text(note));
+                    } else {
+                        bottomRow.append($('<span>'));
+                    }
+
+                    const controls = $('<div class="order-line-controls">');
+                    if (isChoNau) {
+                        // Cho phép giảm số lượng hoặc xóa khi chưa nấu
+                        const btnMinus = $('<button type="button" class="btn-qty-pos" title="Giảm số lượng">-</button>')
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                                if (qty > 1) {
+                                    updateSavedItemQuantity(detailId, qty - 1);
+                                } else {
+                                    deleteSavedItem(detailId, name);
+                                }
+                            });
+                        const qtySpan = $('<span class="qty-display-pos">').text(qty);
+                        const btnPlus = $('<button type="button" class="btn-qty-pos" title="Tăng số lượng">+</button>')
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                                updateSavedItemQuantity(detailId, qty + 1);
+                            });
+                        const btnDel = $('<button type="button" class="btn-del-pos" title="Xóa món">&times;</button>')
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                                deleteSavedItem(detailId, name);
+                            });
+
+                        controls.append(btnMinus, qtySpan, btnPlus, btnDel);
+                    } else {
+                        // Đang nấu hoặc đã xong -> Không cho xóa
+                        controls.append($('<span class="qty-display-pos" style="color: #6c757d;">').text(`x${qty}`));
+                        controls.append($('<button type="button" class="btn-del-pos" disabled title="Món đang nấu hoặc đã xong, không thể xóa">&times;</button>'));
+                    }
+
+                    bottomRow.append(controls);
+                    row.append(topRow, bottomRow);
+
+                    row.on('click', function () {
+                        activeSelection = { type: 'saved', item: { maChiTiet: detailId, tenMonAn: name, soLuong: qty, donGia: price, isChoNau } };
+                        quantity = String(qty);
+                        setEntryMode('quantity');
+                        $('#selected-quantity').text(quantity);
+                        $('#selected-menu-item').text(`${name} (Đã gửi bếp)`);
+                        $('#dish-note').val(note || '');
+                        renderLines();
+                    });
+
+                    container.append(row);
+                });
+
+                // 2. Hiển thị các món MỚI CHỌN (draft - chưa gửi bếp)
+                draftItems.forEach((draft, idx) => {
+                    const row = $('<article class="order-line">')
+                        .toggleClass('active-line', activeSelection?.type === 'draft' && activeSelection?.index === idx);
+
+                    const topRow = $('<div class="order-line-top">')
+                        .append($('<div class="order-line-name-badge">')
+                            .append($('<span class="order-line-name">').text(draft.tenMonAn))
+                            .append($('<span class="pos-badge pos-badge-draft">Chưa gửi bếp</span>')))
+                        .append($('<strong>').text(formatMoney(draft.donGia * draft.soLuong)));
+
+                    const bottomRow = $('<div class="order-line-bottom">');
+                    if (draft.ghiChuMon) {
+                        bottomRow.append($('<em class="order-line-note">').text(draft.ghiChuMon));
+                    } else {
+                        bottomRow.append($('<span>'));
+                    }
+
+                    const controls = $('<div class="order-line-controls">');
+                    const btnMinus = $('<button type="button" class="btn-qty-pos" title="Giảm số lượng">-</button>')
+                        .on('click', function (e) {
+                            e.stopPropagation();
+                            if (draft.soLuong > 1) {
+                                draft.soLuong -= 1;
+                            } else {
+                                draftItems.splice(idx, 1);
+                                if (activeSelection?.type === 'draft' && activeSelection?.index === idx) {
+                                    activeSelection = null;
+                                }
+                            }
+                            renderLines();
+                            updateTotals();
+                        });
+                    const qtySpan = $('<span class="qty-display-pos">').text(draft.soLuong);
+                    const btnPlus = $('<button type="button" class="btn-qty-pos" title="Tăng số lượng">+</button>')
+                        .on('click', function (e) {
+                            e.stopPropagation();
+                            draft.soLuong += 1;
+                            renderLines();
+                            updateTotals();
+                        });
+                    const btnDel = $('<button type="button" class="btn-del-pos" title="Xóa món chưa gửi">&times;</button>')
+                        .on('click', function (e) {
+                            e.stopPropagation();
+                            draftItems.splice(idx, 1);
+                            if (activeSelection?.type === 'draft' && activeSelection?.index === idx) {
+                                activeSelection = null;
+                            }
+                            notify(`Đã xóa món ${draft.tenMonAn}`);
+                            renderLines();
+                            updateTotals();
+                        });
+
+                    controls.append(btnMinus, qtySpan, btnPlus, btnDel);
+                    bottomRow.append(controls);
+                    row.append(topRow, bottomRow);
+
+                    row.on('click', function () {
+                        activeSelection = { type: 'draft', index: idx, item: draft };
+                        quantity = String(draft.soLuong);
+                        setEntryMode('quantity');
+                        $('#selected-quantity').text(quantity);
+                        $('#selected-menu-item').text(`${draft.tenMonAn} (Chưa gửi bếp)`);
+                        $('#dish-note').val(draft.ghiChuMon || '');
+                        renderLines();
+                    });
+
                     container.append(row);
                 });
             }
 
-            function refreshOrder() {
+            function deleteSavedItem(detailId, name) {
+                if (!confirm(`Bạn có chắc muốn xóa món "${name}" khỏi đơn hàng không?`)) return;
+
+                $.ajax({
+                    url: `/api/restaurant/orders/items/${detailId}`,
+                    method: 'DELETE',
+                    dataType: 'json'
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'Không thể xóa món.', true);
+                        return;
+                    }
+                    notify(`Đã xóa món "${name}" thành công.`);
+                    refreshOrder();
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Không thể xóa món.', true));
+            }
+
+            function updateSavedItemQuantity(detailId, newQty) {
+                $.ajax({
+                    url: `/api/restaurant/orders/items/${detailId}/quantity`,
+                    method: 'PUT',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maChiTiet: detailId, soLuong: newQty })
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'Cập nhật số lượng thất bại.', true);
+                        return;
+                    }
+                    refreshOrder();
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Cập nhật số lượng thất bại.', true));
+            }
+
+            function refreshOrder(callback) {
                 const tableId = selectedTableId();
                 if (!tableId) {
                     currentOrder = null;
+                    draftItems = [];
+                    activeSelection = null;
                     $('#opened-at').text('--:--');
-                    $('#current-order-label').text('No table selected');
+                    $('#current-order-label').text('Chưa chọn bàn');
                     renderLines();
                     updateTotals();
+                    if (callback) callback();
                     return;
                 }
 
                 $.ajax({ url: `/api/restaurant/orders/table/${tableId}`, method: 'GET', dataType: 'json' })
                     .done(response => {
                         if (!response?.success) {
-                            notify(response?.message || 'Could not load order.', true);
+                            notify(response?.message || 'Không thể tải đơn hàng.', true);
                             return;
                         }
                         currentOrder = response.data || null;
                         discount = 0;
                         const opened = readValue(currentOrder, 'thoiGianTao', 'ThoiGianTao');
                         $('#opened-at').text(opened ? new Date(opened).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }) : '--:--');
-                        $('#current-order-label').text(orderId() ? `Order #${orderId()}` : 'New order');
+                        $('#current-order-label').text(orderId() ? `Đơn hàng #${orderId()}` : 'Bàn mới (chưa có đơn)');
                         renderLines();
                         updateTotals();
+                        if (callback) callback();
                     })
-                    .fail(() => notify('Could not load order.', true));
+                    .fail(() => {
+                        notify('Không thể tải đơn hàng của bàn.', true);
+                        if (callback) callback();
+                    });
             }
 
             function renderCategories() {
@@ -230,23 +472,51 @@
                 const items = category ? (readValue(category, 'monAn', 'MonAn') || []) : [];
                 const grid = $('#menu-grid').empty();
                 if (!items.length) {
-                    grid.append($('<div class="menu-empty">').text('No active dishes in this category.'));
+                    grid.append($('<div class="menu-empty">').text('Không có món ăn trong danh mục này.'));
                     return;
                 }
 
                 items.forEach(item => {
-                    const id = readValue(item, 'maMonAn', 'MaMonAn');
+                    const id = Number(readValue(item, 'maMonAn', 'MaMonAn'));
+                    const name = readValue(item, 'tenMonAn', 'TenMonAn');
+                    const price = Number(readValue(item, 'donGia', 'DonGia') || 0);
+
                     const card = $('<button type="button" class="dish-tile">')
-                        .toggleClass('active', Number(readValue(selectedItem, 'maMonAn', 'MaMonAn')) === Number(id))
-                        .append($('<strong>').text(readValue(item, 'tenMonAn', 'TenMonAn')))
-                        .append($('<span>').text(formatMoney(readValue(item, 'donGia', 'DonGia'))))
+                        .append($('<strong>').text(name))
+                        .append($('<span>').text(formatMoney(price)))
                         .on('click', () => {
-                            selectedItem = item;
-                            quantity = '1';
+                            const tableId = selectedTableId();
+                            if (!tableId) {
+                                notify('Vui lòng chọn bàn trước khi gọi món.', true);
+                                return;
+                            }
+
+                            // 1 lần bấm = 1, bấm 2 lần = 2... hiển thị luôn vào danh sách!
+                            let existing = draftItems.find(d => d.maMonAn === id);
+                            if (existing) {
+                                existing.soLuong += 1;
+                                activeSelection = { type: 'draft', index: draftItems.indexOf(existing), item: existing };
+                                quantity = String(existing.soLuong);
+                            } else {
+                                const newDraft = {
+                                    maMonAn: id,
+                                    tenMonAn: name,
+                                    donGia: price,
+                                    soLuong: 1,
+                                    ghiChuMon: ''
+                                };
+                                draftItems.push(newDraft);
+                                activeSelection = { type: 'draft', index: draftItems.length - 1, item: newDraft };
+                                quantity = '1';
+                            }
+
                             setEntryMode('quantity');
                             $('#selected-quantity').text(quantity);
-                            $('#selected-menu-item').text(readValue(item, 'tenMonAn', 'TenMonAn'));
-                            renderMenuItems();
+                            $('#selected-menu-item').text(`${name} (x${quantity})`);
+                            $('#dish-note').val(activeSelection.item.ghiChuMon || '');
+
+                            renderLines();
+                            updateTotals();
                         });
                     grid.append(card);
                 });
@@ -256,7 +526,7 @@
                 $.ajax({ url: '/api/restaurant/menu', method: 'GET', dataType: 'json' })
                     .done(response => {
                         if (!response?.success) {
-                            $('#menu-grid').text(response?.message || 'Could not load menu.');
+                            $('#menu-grid').text(response?.message || 'Không thể tải thực đơn.');
                             return;
                         }
                         categories = response.data || [];
@@ -264,75 +534,86 @@
                         renderCategories();
                         renderMenuItems();
                     })
-                    .fail(() => $('#menu-grid').text('Could not load menu.'));
+                    .fail(() => $('#menu-grid').text('Không thể tải thực đơn.'));
             }
 
-            function loadTables() {
+            function loadTables(callback) {
                 $.ajax({ url: '/api/restaurant/tables', method: 'GET', dataType: 'json' })
                     .done(response => {
                         if (!response?.success) {
-                            notify(response?.message || 'Could not load tables.', true);
+                            notify(response?.message || 'Không thể tải danh sách bàn.', true);
                             return;
                         }
                         tables = response.data || [];
                         const select = $('#order-table-select');
                         const selected = select.val();
-                        select.empty().append($('<option value="">').text('Select a table'));
+                        select.empty().append($('<option value="">').text('-- Chọn bàn --'));
                         tables.forEach(table => {
                             const id = readValue(table, 'maBan', 'MaBan');
                             const number = readValue(table, 'soHieuBan', 'SoHieuBan');
                             const area = readValue(table, 'khuVuc', 'KhuVuc');
-                            select.append($('<option>').val(id).text(`${number} - ${area || ''}`));
+                            const status = readValue(table, 'trangThai', 'TrangThai');
+                            const statusStr = status === 'TRONG' ? 'Trống' : (status === 'DANG_PHUC_VU' ? 'Có khách' : 'Chờ TT');
+                            select.append($('<option>').val(id).text(`${number} - ${area || ''} [${statusStr}]`));
                         });
                         if (selected && tables.some(table => Number(readValue(table, 'maBan', 'MaBan')) === Number(selected))) {
                             select.val(selected);
                         }
-                        refreshOrder();
+                        refreshOrder(callback);
                     })
-                    .fail(() => notify('Could not load tables.', true));
+                    .fail(() => notify('Không thể tải danh sách bàn.', true));
             }
 
-            function addSelectedItem() {
-                if (!selectedItem) {
-                    notify('Select a dish first.', true);
-                    return;
-                }
+            function sendDraftOrderToKitchen() {
                 const tableId = selectedTableId();
                 if (!tableId) {
-                    notify('Select a table first.', true);
+                    notify('Vui lòng chọn bàn trước khi gửi bếp.', true);
                     return;
                 }
-                const qty = Math.max(1, parseInt(quantity || '1', 10));
+
+                if (!draftItems.length) {
+                    if (currentOrder && (readValue(currentOrder, 'chiTiet', 'ChiTiet')?.length > 0)) {
+                        notify('Tất cả các món đã được gửi cho bếp rồi.');
+                    } else {
+                        notify('Vui lòng chọn ít nhất một món trước khi gửi bếp.', true);
+                    }
+                    return;
+                }
+
                 const request = {
                     maBan: tableId,
-                    maDonHang: orderId() || null,
-                    maMonAn: readValue(selectedItem, 'maMonAn', 'MaMonAn'),
-                    soLuong: qty,
-                    ghiChuMon: $('#dish-note').val() || null
+                    items: draftItems.map(d => ({
+                        maMonAn: d.maMonAn,
+                        soLuong: d.soLuong,
+                        ghiChuMon: d.ghiChuMon || null
+                    }))
                 };
+
                 $.ajax({
-                    url: '/api/restaurant/orders',
+                    url: '/api/restaurant/order',
                     method: 'POST',
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json',
                     data: JSON.stringify(request)
                 }).done(response => {
                     if (!response?.success) {
-                        notify(response?.message || 'Could not add dish.', true);
+                        notify(response?.message || 'Không thể gửi món cho bếp.', true);
                         return;
                     }
+                    const count = draftItems.length;
+                    draftItems = [];
+                    activeSelection = null;
                     $('#dish-note').val('');
-                    selectedItem = null;
-                    $('#selected-menu-item').text('Select a dish');
-                    notify('Dish added to the order and queued for kitchen.');
+                    $('#selected-menu-item').text('Chưa chọn món');
+                    notify(`Đã gửi ${count} món cho bếp thành công!`);
                     loadTables();
-                }).fail(xhr => notify(xhr.responseJSON?.message || 'Could not add dish.', true));
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Không thể gửi món cho bếp.', true));
             }
 
             function buildVietQr() {
                 if (!qrConfig.bankId || !qrConfig.accountNumber) {
                     $('#vietqr-box').prop('hidden', true);
-                    $('#payment-hint').text('Configure VietQr:BankId and VietQr:AccountNumber in appsettings.json to create a payable QR.');
+                    $('#payment-hint').text('Chưa cấu hình tài khoản ngân hàng trong appsettings.json.');
                     return;
                 }
                 const order = orderId();
@@ -343,14 +624,18 @@
                 });
                 const imageUrl = `https://img.vietqr.io/image/${encodeURIComponent(qrConfig.bankId)}-${encodeURIComponent(qrConfig.accountNumber)}-compact2.png?${params}`;
                 $('#vietqr-image').attr('src', imageUrl);
-                $('#vietqr-caption').text(`Order #${order} - ${formatMoney(payable())}`);
+                $('#vietqr-caption').text(`Đơn #${order} - ${formatMoney(payable())}`);
                 $('#vietqr-box').prop('hidden', false);
-                $('#payment-hint').text('Scan the QR code, then confirm the received payment.');
+                $('#payment-hint').text('Quét mã QR để thanh toán, sau đó nhấn xác nhận.');
             }
 
             function showPayment() {
                 if (!orderId() || !subtotal()) {
-                    notify('Add at least one dish before payment.', true);
+                    notify('Cần có đơn hàng và món ăn trước khi thanh toán.', true);
+                    return;
+                }
+                if (draftItems.length > 0) {
+                    notify('Còn món chưa gửi bếp. Vui lòng gửi bếp trước khi thanh toán.', true);
                     return;
                 }
                 $('#category-grid, #menu-grid').prop('hidden', true);
@@ -359,16 +644,16 @@
                 paymentMethod = null;
                 $('.payment-method').removeClass('active');
                 $('#vietqr-box').prop('hidden', true);
-                $('#payment-hint').text('Select a payment method.');
+                $('#payment-hint').text('Vui lòng chọn hình thức thanh toán.');
             }
 
             function confirmPayment() {
                 if (!orderId() || !paymentMethod) {
-                    notify('Select an order and payment method.', true);
+                    notify('Vui lòng chọn phương thức thanh toán.', true);
                     return;
                 }
                 if (paymentMethod === 'VIETQR' && (!qrConfig.bankId || !qrConfig.accountNumber)) {
-                    notify('VietQR bank details are not configured.', true);
+                    notify('Chưa cấu hình thông tin ngân hàng VietQR.', true);
                     return;
                 }
                 $.ajax({
@@ -383,42 +668,60 @@
                     })
                 }).done(response => {
                     if (!response?.success) {
-                        notify(response?.message || 'Payment failed.', true);
+                        notify(response?.message || 'Thanh toán thất bại.', true);
                         return;
                     }
                     currentOrder = null;
+                    draftItems = [];
                     discount = 0;
                     $('#payment-panel').prop('hidden', true);
                     $('#category-grid, #menu-grid').prop('hidden', false);
-                    notify('Payment completed.');
+                    notify('Thanh toán và hoàn tất đơn hàng thành công!');
                     loadTables();
-                }).fail(xhr => notify(xhr.responseJSON?.message || 'Payment failed.', true));
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Thanh toán thất bại.', true));
             }
 
             function showReceipt() {
                 const lines = readValue(currentOrder, 'chiTiet', 'ChiTiet') || [];
                 const content = $('#receipt-content').empty();
-                content.append($('<p>').text(`Table: ${$('#order-table-select option:selected').text()}`));
+                content.append($('<p>').text(`Bàn: ${$('#order-table-select option:selected').text()}`));
                 lines.forEach(line => {
                     const qty = readValue(line, 'soLuong', 'SoLuong');
                     const name = readValue(line, 'tenMonAn', 'TenMonAn');
                     const price = Number(readValue(line, 'donGia', 'DonGia') || 0) * qty;
-                content.append($('<div class="receipt-line">').text(`${qty} x ${name} - ${formatMoney(price)}`));
+                    content.append($('<div class="receipt-line">').text(`${qty} x ${name} - ${formatMoney(price)}`));
                 });
+                if (draftItems.length > 0) {
+                    content.append($('<hr>'));
+                    content.append($('<p style="font-weight: bold; color: #0d6efd;">').text('Món chưa gửi bếp:'));
+                    draftItems.forEach(d => {
+                        content.append($('<div class="receipt-line">').text(`${d.soLuong} x ${d.tenMonAn} - ${formatMoney(d.donGia * d.soLuong)}`));
+                    });
+                }
                 content.append($('<hr>'));
-                content.append($('<div class="receipt-line">').text(`Subtotal: ${formatMoney(subtotal())}`));
-                content.append($('<div class="receipt-line">').text(`VAT 8%: ${formatMoney(vat())}`));
-                content.append($('<div class="receipt-line">').text(`Discount: ${formatMoney(discount)}`));
-                content.append($('<strong class="receipt-total">').text(`Total: ${formatMoney(payable())}`));
+                content.append($('<div class="receipt-line">').text(`Tạm tính: ${formatMoney(subtotal())}`));
+                content.append($('<div class="receipt-line">').text(`Thuế VAT 8%: ${formatMoney(vat())}`));
+                content.append($('<div class="receipt-line">').text(`Giảm giá: ${formatMoney(discount)}`));
+                content.append($('<strong class="receipt-total">').text(`Tổng thanh toán: ${formatMoney(payable())}`));
                 $('#receipt-overlay').prop('hidden', false);
             }
 
             $('#order-table-select').on('change', function () {
                 currentOrder = null;
+                draftItems = [];
+                activeSelection = null;
                 discount = 0;
-                selectedItem = null;
                 $('#dish-note').val('');
+                $('#selected-menu-item').text('Chưa chọn món');
                 refreshOrder();
+            });
+
+            $('#dish-note').on('input', function () {
+                const val = $(this).val();
+                if (activeSelection?.type === 'draft') {
+                    draftItems[activeSelection.index].ghiChuMon = val;
+                    renderLines();
+                }
             });
 
             $('.order-numpad').on('click', 'button', function () {
@@ -426,14 +729,23 @@
                 if (key === 'clear') quantity = '';
                 else if (key === 'backspace') quantity = quantity.slice(0, -1);
                 else quantity += String($(this).data('digit'));
+
                 $('#selected-quantity').text(quantity || '0');
+
+                // Nếu đang chọn món draft, cập nhật số lượng ngay
+                if (entryMode === 'quantity' && activeSelection?.type === 'draft') {
+                    const parsed = Math.max(1, parseInt(quantity || '1', 10));
+                    draftItems[activeSelection.index].soLuong = parsed;
+                    renderLines();
+                    updateTotals();
+                }
             });
 
             $('#discount-mode').on('click', function () {
                 setEntryMode('discount');
                 quantity = String(discount || '');
                 $('#selected-quantity').text(quantity || '0');
-                notify('Enter a discount amount, then press the green check.');
+                notify('Nhập số tiền giảm giá, sau đó bấm dấu kiểm xanh.');
             });
 
             $('#confirm-selection').on('click', function () {
@@ -447,9 +759,16 @@
                     setEntryMode('quantity');
                     quantity = '1';
                     $('#selected-quantity').text(quantity);
+                    notify('Đã áp dụng giảm giá.');
                     return;
                 }
-                addSelectedItem();
+
+                // Nếu đang chọn món đã lưu (chờ nấu), cập nhật số lượng lên server
+                if (activeSelection?.type === 'saved' && activeSelection.item?.isChoNau) {
+                    const parsed = Math.max(1, parseInt(quantity || '1', 10));
+                    updateSavedItemQuantity(activeSelection.item.maChiTiet, parsed);
+                    return;
+                }
             });
 
             $('#cancel-action').on('click', function () {
@@ -458,30 +777,26 @@
                     $('#category-grid, #menu-grid').prop('hidden', false);
                     $('#back-to-menu').prop('hidden', true);
                 }
-                selectedItem = null;
+                activeSelection = null;
                 quantity = '1';
                 setEntryMode('quantity');
                 $('#selected-quantity').text(quantity);
-                $('#selected-menu-item').text('Select a dish');
+                $('#selected-menu-item').text('Chưa chọn món');
                 $('#dish-note').val('');
-                renderMenuItems();
+                renderLines();
             });
 
             $('#note-focus').on('click', () => $('#dish-note').trigger('focus'));
-            $('#send-order').on('click', function () {
-                if (!orderId()) {
-                    notify('Add a dish before sending the order.', true);
-                    return;
-                }
-                notify('Order is saved and visible to the kitchen queue.');
-            });
+            $('#send-order').on('click', sendDraftOrderToKitchen);
             $('#subtotal-preview').on('click', showReceipt);
             $('#open-payment').on('click', showPayment);
+
             $('#back-to-menu').on('click', function () {
                 $('#payment-panel').prop('hidden', true);
                 $('#category-grid, #menu-grid').prop('hidden', false);
                 $(this).prop('hidden', true);
             });
+
             $('.payment-method').on('click', function () {
                 paymentMethod = $(this).data('method');
                 $('.payment-method').removeClass('active');
@@ -489,22 +804,135 @@
                 if (paymentMethod === 'VIETQR') buildVietQr();
                 else {
                     $('#vietqr-box').prop('hidden', true);
-                    $('#payment-hint').text('Press the green check to confirm payment.');
+                    $('#payment-hint').text('Nhấn dấu kiểm xanh để hoàn tất thanh toán.');
                 }
             });
+
             $('[data-close-overlay]').on('click', () => $('#receipt-overlay').prop('hidden', true));
             $('#receipt-overlay').on('click', event => {
                 if (event.target === event.currentTarget) $('#receipt-overlay').prop('hidden', true);
             });
             $('#print-receipt').on('click', () => window.print());
-            $('#transfer-table, #merge-table').on('click', () => notify('Table transfer/merge requires a dedicated API action.', true));
+
+            // --- XỬ LÝ CHUYỂN BÀN & GỘP BÀN TRONG POS ---
+            $('#transfer-table').on('click', function () {
+                const tableId = selectedTableId();
+                if (!tableId) {
+                    notify('Vui lòng chọn bàn cần chuyển.', true);
+                    return;
+                }
+                if (draftItems.length > 0) {
+                    notify('Vui lòng gửi bếp hoặc hủy các món chưa gửi trước khi chuyển bàn.', true);
+                    return;
+                }
+                const currentTable = tables.find(t => Number(readValue(t, 'maBan', 'MaBan')) === tableId);
+                const tableName = currentTable ? `${readValue(currentTable, 'soHieuBan', 'SoHieuBan')} (${readValue(currentTable, 'khuVuc', 'KhuVuc') || ''})` : `Bàn ${tableId}`;
+                $('#transfer-source-name').val(tableName);
+
+                const select = $('#transfer-target-select').empty();
+                const availableTables = tables.filter(t => Number(readValue(t, 'maBan', 'MaBan')) !== tableId);
+                availableTables.forEach(t => {
+                    const id = readValue(t, 'maBan', 'MaBan');
+                    const status = readValue(t, 'trangThai', 'TrangThai');
+                    const statusStr = status === 'TRONG' ? 'Trống' : (status === 'DANG_PHUC_VU' ? 'Có khách' : 'Chờ TT');
+                    select.append($('<option>').val(id).text(`${readValue(t, 'soHieuBan', 'SoHieuBan')} - ${readValue(t, 'khuVuc', 'KhuVuc') || ''} [${statusStr}]`));
+                });
+                $('#transfer-modal').prop('hidden', false);
+            });
+
+            $('[data-close-transfer]').on('click', () => $('#transfer-modal').prop('hidden', true));
+
+            $('#btn-confirm-transfer').on('click', function () {
+                const sourceId = selectedTableId();
+                const targetId = Number($('#transfer-target-select').val());
+                if (!sourceId || !targetId || sourceId === targetId) {
+                    notify('Vui lòng chọn bàn nhận hợp lệ.', true);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/restaurant/tables/transfer',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maBanNguon: sourceId, maBanDich: targetId })
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'Chuyển bàn thất bại.', true);
+                        return;
+                    }
+                    $('#transfer-modal').prop('hidden', true);
+                    notify('Chuyển bàn thành công!');
+                    loadTables(() => {
+                        $('#order-table-select').val(targetId);
+                        refreshOrder();
+                    });
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Chuyển bàn thất bại.', true));
+            });
+
+            $('#merge-table').on('click', function () {
+                const tableId = selectedTableId();
+                if (!tableId) {
+                    notify('Vui lòng chọn bàn cần gộp.', true);
+                    return;
+                }
+                if (draftItems.length > 0) {
+                    notify('Vui lòng gửi bếp hoặc hủy các món chưa gửi trước khi gộp bàn.', true);
+                    return;
+                }
+                const currentTable = tables.find(t => Number(readValue(t, 'maBan', 'MaBan')) === tableId);
+                const tableName = currentTable ? `${readValue(currentTable, 'soHieuBan', 'SoHieuBan')} (${readValue(currentTable, 'khuVuc', 'KhuVuc') || ''})` : `Bàn ${tableId}`;
+                $('#merge-source-name').val(tableName);
+
+                const select = $('#merge-target-select').empty();
+                const availableTables = tables.filter(t => Number(readValue(t, 'maBan', 'MaBan')) !== tableId);
+                availableTables.forEach(t => {
+                    const id = readValue(t, 'maBan', 'MaBan');
+                    const status = readValue(t, 'trangThai', 'TrangThai');
+                    const statusStr = status === 'TRONG' ? 'Trống' : (status === 'DANG_PHUC_VU' ? 'Có khách' : 'Chờ TT');
+                    select.append($('<option>').val(id).text(`${readValue(t, 'soHieuBan', 'SoHieuBan')} - ${readValue(t, 'khuVuc', 'KhuVuc') || ''} [${statusStr}]`));
+                });
+                $('#merge-modal').prop('hidden', false);
+            });
+
+            $('[data-close-merge]').on('click', () => $('#merge-modal').prop('hidden', true));
+
+            $('#btn-confirm-merge').on('click', function () {
+                const sourceId = selectedTableId();
+                const targetId = Number($('#merge-target-select').val());
+                if (!sourceId || !targetId || sourceId === targetId) {
+                    notify('Vui lòng chọn bàn đích hợp lệ.', true);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/api/restaurant/tables/merge',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maBanNguon: sourceId, maBanDich: targetId })
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'Gộp bàn thất bại.', true);
+                        return;
+                    }
+                    $('#merge-modal').prop('hidden', true);
+                    notify('Gộp bàn thành công!');
+                    loadTables(() => {
+                        $('#order-table-select').val(targetId);
+                        refreshOrder();
+                    });
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Gộp bàn thất bại.', true));
+            });
 
             if (typeof signalR !== 'undefined') {
                 const hubConnection = new signalR.HubConnectionBuilder()
                     .withUrl('/restaurantHub')
                     .withAutomaticReconnect()
                     .build();
-                hubConnection.on('ReceiveDataUpdate', loadTables);
+                hubConnection.on('ReceiveDataUpdate', () => {
+                    loadTables();
+                });
                 hubConnection.start().catch(() => {});
             }
 
