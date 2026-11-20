@@ -38,14 +38,14 @@
                 <span id="guest-cart-count">0 m&#243;n</span>
                 <strong id="guest-cart-total">0 &#8363;</strong>
             </div>
-            <button type="button" id="send-guest-order" disabled>G&#7917;i order t&#7899;i b&#7871;p</button>
+            <button type="button" id="send-guest-order" disabled>Gửi món tới bếp</button>
         </footer>
 
         <section id="guest-success" class="guest-success" hidden>
             <div class="success-mark">&#10003;</div>
-            <h2>&#272;&#227; g&#7917;i order th&#224;nh c&#244;ng</h2>
-            <p>M&#243;n &#259;n &#273;ang &#273;&#432;&#7907;c chuy&#7875;n t&#7899;i b&#7871;p.</p>
-            <button type="button" id="order-more">G&#7885;i th&#234;m m&#243;n</button>
+            <h2>Đã gửi món thành công</h2>
+            <p>Món ăn đang được chuyển tới bếp.</p>
+            <button type="button" id="order-more">Gọi thêm món</button>
         </section>
         <div id="guest-message" class="guest-message" role="status" aria-live="polite"></div>
     </main>
@@ -224,16 +224,16 @@
                     data: JSON.stringify({ maBan: tableId, items })
                 }).done(response => {
                     if (!response?.success) {
-                        notify(response?.message || 'Không thể gửi order.', true);
-                        button.text('Gửi order tới bếp');
+                        notify(response?.message || 'Không thể gửi đơn món.', true);
+                        button.text('Gửi món tới bếp');
                         updateCartSummary();
                         return;
                     }
                     $('#guest-app > :not(.guest-header):not(.guest-success):not(.guest-message)').prop('hidden', true);
                     $('#guest-success').prop('hidden', false);
                 }).fail(xhr => {
-                    notify(xhr.responseJSON?.message || 'Không thể gửi order.', true);
-                    button.text('Gửi order tới bếp');
+                    notify(xhr.responseJSON?.message || 'Không thể gửi đơn món.', true);
+                    button.text('Gửi món tới bếp');
                     updateCartSummary();
                 });
             });
