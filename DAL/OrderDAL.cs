@@ -168,6 +168,136 @@ public sealed class OrderDAL
         }
     }
 
+    public int? AddGuestOrder(int tableId, IReadOnlyList<GuestOrderItemRequest> items)
+    {
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+
+        try
+        {
+            const string lockTableSql = """
+                SELECT trang_thai
+                FROM ban_an WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_ban = @ma_ban;
+                """;
+
+            object? tableStatusValue;
+            using (var lockTableCommand = dbHelper.CreateCommand(connection, lockTableSql, transaction))
+            {
+                lockTableCommand.Parameters.AddWithValue("@ma_ban", tableId);
+                tableStatusValue = lockTableCommand.ExecuteScalar();
+            }
+
+            if (tableStatusValue is null or DBNull)
+            {
+                transaction.Rollback();
+                return null;
+            }
+
+            var tableStatus = Convert.ToString(tableStatusValue);
+            if (tableStatus is "DA_DAT" or "CHO_THANH_TOAN")
+            {
+                transaction.Rollback();
+                return null;
+            }
+
+            const string findOrderSql = """
+                SELECT TOP (1) ma_don_hang
+                FROM don_hang WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_ban = @ma_ban
+                  AND trang_thai_don = @trang_thai_don
+                ORDER BY thoi_gian_tao DESC, ma_don_hang DESC;
+                """;
+
+            int orderId;
+            using (var findOrderCommand = dbHelper.CreateCommand(connection, findOrderSql, transaction))
+            {
+                findOrderCommand.Parameters.AddWithValue("@ma_ban", tableId);
+                findOrderCommand.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                var existingOrderId = findOrderCommand.ExecuteScalar();
+                if (existingOrderId is null or DBNull)
+                {
+                    const string insertOrderSql = """
+                        INSERT INTO don_hang (ma_ban, ma_nhan_vien, trang_thai_don)
+                        OUTPUT INSERTED.ma_don_hang
+                        VALUES (@ma_ban, NULL, @trang_thai_don);
+                        """;
+
+                    using var insertOrderCommand = dbHelper.CreateCommand(connection, insertOrderSql, transaction);
+                    insertOrderCommand.Parameters.AddWithValue("@ma_ban", tableId);
+                    insertOrderCommand.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                    orderId = Convert.ToInt32(insertOrderCommand.ExecuteScalar());
+                }
+                else
+                {
+                    orderId = Convert.ToInt32(existingOrderId);
+                }
+            }
+
+            const string insertItemSql = """
+                INSERT INTO chi_tiet_don_hang
+                    (ma_don_hang, ma_mon_an, so_luong, don_gia_luc_goi, ghi_chu_mon)
+                OUTPUT INSERTED.don_gia_luc_goi
+                SELECT @ma_don_hang, m.ma_mon_an, @so_luong, m.don_gia, @ghi_chu_mon
+                FROM mon_an AS m
+                WHERE m.ma_mon_an = @ma_mon_an
+                  AND m.trang_thai_ban = 1;
+                """;
+
+            decimal subtotalToAdd = 0;
+            foreach (var item in items)
+            {
+                using var insertItemCommand = dbHelper.CreateCommand(connection, insertItemSql, transaction);
+                insertItemCommand.Parameters.AddWithValue("@ma_don_hang", orderId);
+                insertItemCommand.Parameters.AddWithValue("@ma_mon_an", item.MaMonAn);
+                insertItemCommand.Parameters.AddWithValue("@so_luong", item.SoLuong);
+                insertItemCommand.Parameters.AddWithValue("@ghi_chu_mon", (object?)item.GhiChuMon ?? DBNull.Value);
+                var priceValue = insertItemCommand.ExecuteScalar();
+                if (priceValue is null or DBNull)
+                {
+                    transaction.Rollback();
+                    return null;
+                }
+
+                subtotalToAdd += Convert.ToDecimal(priceValue) * item.SoLuong;
+            }
+
+            const string updateOrderSql = """
+                UPDATE don_hang
+                SET tong_tien_tam = ISNULL(tong_tien_tam, 0) + @tien_them
+                WHERE ma_don_hang = @ma_don_hang;
+                """;
+
+            using (var updateOrderCommand = dbHelper.CreateCommand(connection, updateOrderSql, transaction))
+            {
+                updateOrderCommand.Parameters.AddWithValue("@tien_them", subtotalToAdd);
+                updateOrderCommand.Parameters.AddWithValue("@ma_don_hang", orderId);
+                updateOrderCommand.ExecuteNonQuery();
+            }
+
+            const string updateTableSql = """
+                UPDATE ban_an
+                SET trang_thai = N'DANG_PHUC_VU'
+                WHERE ma_ban = @ma_ban;
+                """;
+
+            using (var updateTableCommand = dbHelper.CreateCommand(connection, updateTableSql, transaction))
+            {
+                updateTableCommand.Parameters.AddWithValue("@ma_ban", tableId);
+                updateTableCommand.ExecuteNonQuery();
+            }
+
+            transaction.Commit();
+            return orderId;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
     public List<MenuCategory> GetMenuCategories()
     {
         const string sql = """

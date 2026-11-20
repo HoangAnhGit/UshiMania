@@ -1,0 +1,253 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Guest Order";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Ushi Mania - Guest Order</title>
+    <link rel="stylesheet" href="/css/guest-order.css" asp-append-version="true" />
+</head>
+<body>
+    <main class="guest-app" id="guest-app">
+        <header class="guest-header">
+            <div class="guest-brand-mark">UM</div>
+            <div>
+                <p class="guest-eyebrow">USHI MANIA</p>
+                <h1>G&#7885;i m&#243;n t&#7841;i b&#224;n</h1>
+            </div>
+        </header>
+
+        <section class="guest-table-card">
+            <div>
+                <span class="guest-label">B&#224;n c&#7911;a b&#7841;n</span>
+                <strong id="guest-table-name">&#272;ang t&#7843;i...</strong>
+            </div>
+            <span class="guest-table-icon">&#9679;</span>
+        </section>
+
+        <nav id="guest-categories" class="guest-categories" aria-label="Danh m&#7909;c th&#7921;c &#273;&#417;n"></nav>
+        <section id="guest-menu" class="guest-menu" aria-live="polite">
+            <div class="guest-empty">&#272;ang t&#7843;i th&#7921;c &#273;&#417;n...</div>
+        </section>
+
+        <footer class="guest-cart-bar">
+            <div class="guest-cart-summary">
+                <span id="guest-cart-count">0 m&#243;n</span>
+                <strong id="guest-cart-total">0 &#8363;</strong>
+            </div>
+            <button type="button" id="send-guest-order" disabled>G&#7917;i order t&#7899;i b&#7871;p</button>
+        </footer>
+
+        <section id="guest-success" class="guest-success" hidden>
+            <div class="success-mark">&#10003;</div>
+            <h2>&#272;&#227; g&#7917;i order th&#224;nh c&#244;ng</h2>
+            <p>M&#243;n &#259;n &#273;ang &#273;&#432;&#7907;c chuy&#7875;n t&#7899;i b&#7871;p.</p>
+            <button type="button" id="order-more">G&#7885;i th&#234;m m&#243;n</button>
+        </section>
+        <div id="guest-message" class="guest-message" role="status" aria-live="polite"></div>
+    </main>
+
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        $(function () {
+            const tableId = Number(new URLSearchParams(window.location.search).get('maBan') || 0);
+            let categories = [];
+            let activeCategoryId = null;
+            let table = null;
+            let messageTimer;
+            const selection = new Map();
+            const readValue = (obj, camel, pascal) => obj?.[camel] ?? obj?.[pascal];
+            const money = value => new Intl.NumberFormat('vi-VN').format(Number(value || 0)) + ' \u20ab';
+
+            function notify(message, error = false) {
+                const toast = $('#guest-message').text(message).toggleClass('guest-error', error).addClass('guest-visible');
+                window.clearTimeout(messageTimer);
+                messageTimer = window.setTimeout(() => toast.removeClass('guest-visible'), 3200);
+            }
+
+            function renderTable() {
+                if (!table) return;
+                const number = readValue(table, 'soHieuBan', 'SoHieuBan') || `#${tableId}`;
+                $('#guest-table-name').text(`B\u00e0n ${number}`);
+            }
+
+            function selectedTotals() {
+                let count = 0;
+                let total = 0;
+                selection.forEach((value, menuItemId) => {
+                    if (value.quantity > 0) {
+                        count += value.quantity;
+                        const item = findMenuItem(menuItemId);
+                        if (item) total += Number(readValue(item, 'donGia', 'DonGia') || 0) * value.quantity;
+                    }
+                });
+                return { count, total };
+            }
+
+            function findMenuItem(menuItemId) {
+                for (const category of categories) {
+                    const items = readValue(category, 'monAn', 'MonAn') || [];
+                    const item = items.find(value => Number(readValue(value, 'maMonAn', 'MaMonAn')) === Number(menuItemId));
+                    if (item) return item;
+                }
+                return null;
+            }
+
+            function updateCartSummary() {
+                const totals = selectedTotals();
+                $('#guest-cart-count').text(`${totals.count} m\u00f3n`);
+                $('#guest-cart-total').text(money(totals.total));
+                $('#send-guest-order').prop('disabled', totals.count === 0 || !table);
+            }
+
+            function renderCategories() {
+                const container = $('#guest-categories').empty();
+                categories.forEach(category => {
+                    const id = readValue(category, 'maDanhMuc', 'MaDanhMuc');
+                    container.append($('<button type="button" class="guest-category">')
+                        .toggleClass('active', Number(id) === Number(activeCategoryId))
+                        .text(readValue(category, 'tenDanhMuc', 'TenDanhMuc'))
+                        .on('click', () => {
+                            activeCategoryId = id;
+                            renderCategories();
+                            renderMenu();
+                        }));
+                });
+            }
+
+            function renderMenu() {
+                const category = categories.find(value => Number(readValue(value, 'maDanhMuc', 'MaDanhMuc')) === Number(activeCategoryId));
+                const items = category ? (readValue(category, 'monAn', 'MonAn') || []) : [];
+                const container = $('#guest-menu').empty();
+                if (!items.length) {
+                    container.append($('<div class="guest-empty">').text('Ch\u01b0a c\u00f3 m\u00f3n trong danh m\u1ee5c n\u00e0y.'));
+                    return;
+                }
+
+                items.forEach(item => {
+                    const id = Number(readValue(item, 'maMonAn', 'MaMonAn'));
+                    const state = selection.get(id) || { quantity: 0, note: '' };
+                    const card = $('<article class="guest-dish">')
+                        .append($('<div class="guest-dish-info">')
+                            .append($('<h2>').text(readValue(item, 'tenMonAn', 'TenMonAn')))
+                            .append($('<strong class="guest-price">').text(money(readValue(item, 'donGia', 'DonGia')))));
+                    const quantityControls = $('<div class="guest-quantity-controls">')
+                        .append($('<button type="button" class="quantity-button" aria-label="Decrease quantity">-</button>')
+                            .on('click', () => changeQuantity(id, -1)))
+                        .append($('<span class="guest-quantity">').text(state.quantity))
+                        .append($('<button type="button" class="quantity-button" aria-label="Increase quantity">+</button>')
+                            .on('click', () => changeQuantity(id, 1)));
+                    card.append(quantityControls);
+                    if (state.quantity > 0) {
+                        card.append($('<label class="guest-note-label">Ghi ch\u00fa m\u00f3n</label>'));
+                        card.append($('<textarea class="guest-note" maxlength="200" placeholder="V\u00ed d\u1ee5: kh\u00f4ng h\u00e0nh, ch\u00edn k\u1ef9"></textarea>')
+                            .val(state.note)
+                            .on('input', function () {
+                                state.note = $(this).val();
+                                selection.set(id, state);
+                            }));
+                    }
+                    container.append(card);
+                });
+                updateCartSummary();
+            }
+
+            function changeQuantity(menuItemId, delta) {
+                const state = selection.get(menuItemId) || { quantity: 0, note: '' };
+                state.quantity = Math.max(0, state.quantity + delta);
+                if (state.quantity === 0) state.note = '';
+                selection.set(menuItemId, state);
+                renderMenu();
+            }
+
+            function loadTable() {
+                if (!tableId) {
+                    $('#guest-table-name').text('Invalid table');
+                    notify('Invalid table link.', true);
+                    return;
+                }
+                $.getJSON('/api/restaurant/tables')
+                    .done(response => {
+                        if (!response?.success) {
+                            notify(response?.message || 'Could not load table.', true);
+                            return;
+                        }
+                        table = (response.data || []).find(value => Number(readValue(value, 'maBan', 'MaBan')) === tableId) || null;
+                        if (!table) {
+                            $('#guest-table-name').text('Table not found');
+                            notify('Table not found.', true);
+                            return;
+                        }
+                        renderTable();
+                        updateCartSummary();
+                    })
+                    .fail(() => notify('Could not connect to the table service.', true));
+            }
+
+            function loadMenu() {
+                $.getJSON('/api/restaurant/menu')
+                    .done(response => {
+                        if (!response?.success) {
+                            $('#guest-menu').text(response?.message || 'Could not load menu.');
+                            return;
+                        }
+                        categories = response.data || [];
+                        activeCategoryId = categories.length ? readValue(categories[0], 'maDanhMuc', 'MaDanhMuc') : null;
+                        renderCategories();
+                        renderMenu();
+                    })
+                    .fail(() => $('#guest-menu').text('Could not connect to the menu service.'));
+            }
+
+            $('#send-guest-order').on('click', function () {
+                const items = [];
+                selection.forEach((state, menuItemId) => {
+                    if (state.quantity > 0) {
+                        items.push({ maMonAn: menuItemId, soLuong: state.quantity, ghiChuMon: state.note || null });
+                    }
+                });
+                if (!tableId || !items.length) {
+                    notify('Select at least one dish first.', true);
+                    return;
+                }
+
+                const button = $(this).prop('disabled', true).text('Sending...');
+                $.ajax({
+                    url: '/api/restaurant/order',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maBan: tableId, items })
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'Could not send order.', true);
+                        button.text('G\u1eedi order t\u1edbi b\u1ebfp');
+                        updateCartSummary();
+                        return;
+                    }
+                    $('#guest-app > :not(.guest-header):not(.guest-success):not(.guest-message)').prop('hidden', true);
+                    $('#guest-success').prop('hidden', false);
+                }).fail(xhr => {
+                    notify(xhr.responseJSON?.message || 'Could not send order.', true);
+                    button.text('G\u1eedi order t\u1edbi b\u1ebfp');
+                    updateCartSummary();
+                });
+            });
+
+            $('#order-more').on('click', function () {
+                selection.clear();
+                $('#guest-success').prop('hidden', true);
+                $('#guest-app > :not(.guest-header):not(.guest-success):not(.guest-message)').prop('hidden', false);
+                renderMenu();
+                updateCartSummary();
+            });
+
+            loadTable();
+            loadMenu();
+        });
+    </script>
+</body>
+</html>

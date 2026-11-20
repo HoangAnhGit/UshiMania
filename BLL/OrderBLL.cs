@@ -59,6 +59,39 @@ public sealed class OrderBLL
         return orderDAL.AddItem(orderId, menuItemId, quantity, note);
     }
 
+    public int? AddGuestOrder(int tableId, IReadOnlyList<GuestOrderItemRequest>? items)
+    {
+        if (tableId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(tableId), "Table ID must be positive.");
+        }
+
+        if (items is null || items.Count == 0)
+        {
+            throw new ArgumentException("At least one menu item is required.", nameof(items));
+        }
+
+        foreach (var item in items)
+        {
+            if (item.MaMonAn <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(items), "Menu item ID must be positive.");
+            }
+
+            if (item.SoLuong <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(items), "Quantity must be positive.");
+            }
+
+            if (item.GhiChuMon?.Length > 200)
+            {
+                throw new ArgumentException("Dish note cannot exceed 200 characters.", nameof(items));
+            }
+        }
+
+        return orderDAL.AddGuestOrder(tableId, items);
+    }
+
     public List<KitchenOrderItem> GetKitchenItems()
     {
         return orderDAL.GetKitchenItems();

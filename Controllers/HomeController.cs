@@ -38,6 +38,16 @@ namespace UshiMania.Controllers
             return View();
         }
 
+        public IActionResult GuestOrder([FromQuery] int maBan)
+        {
+            if (maBan <= 0)
+            {
+                return BadRequest();
+            }
+
+            return View();
+        }
+
         public IActionResult Privacy()
         {
             return View();

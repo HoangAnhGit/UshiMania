@@ -139,6 +139,40 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
+    [HttpPost("order")]
+    public IActionResult GuestOrder([FromBody] GuestOrderRequest? request)
+    {
+        try
+        {
+            if (request is null)
+            {
+                return Json(new { success = false, message = "Thiếu dữ liệu order.", data = (object?)null });
+            }
+
+            var orderId = orderBLL.AddGuestOrder(request.MaBan, request.Items);
+            if (!orderId.HasValue)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Không thể gửi order: bàn không hợp lệ, đã đặt/chờ thanh toán hoặc có món không bán.",
+                    data = (object?)null
+                });
+            }
+
+            return Json(new
+            {
+                success = true,
+                message = "Order đã được gửi tới bếp.",
+                data = new { maDonHang = orderId.Value }
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(GuestOrder));
+        }
+    }
+
     [HttpGet("menu")]
     public IActionResult GetDanhMucMonAn()
     {

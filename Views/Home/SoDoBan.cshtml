@@ -68,6 +68,16 @@
     </aside>
 </div>
 
+<div id="table-qr-modal" class="qr-modal" hidden>
+    <section class="qr-dialog" role="dialog" aria-modal="true" aria-labelledby="qr-title">
+        <button type="button" class="qr-close" id="close-qr-modal" aria-label="&#272;&#243;ng">&times;</button>
+        <h2 id="qr-title">M&#227; QR g&#7885;i m&#243;n</h2>
+        <p id="qr-table-name" class="qr-table-name"></p>
+        <img id="table-qr-image" class="table-qr-image" alt="QR order link" />
+        <a id="guest-order-preview" class="qr-preview-link" target="_blank" rel="noopener">M&#7903; th&#7917; giao di&#7879;n kh&#225;ch</a>
+    </section>
+</div>
+
 @section Scripts {
     <script>
         $(function () {
@@ -129,7 +139,7 @@
                     const id = tableId(table);
                     const status = normalizeStatus(readValue(table, 'trangThai', 'TrangThai'));
                     const amount = Number(readValue(table, 'tongTienTamTinh', 'TongTienTamTinh') || 0);
-                    const card = $('<button type="button" class="table-card">')
+                    const card = $('<div class="table-card" role="button" tabindex="0">')
                         .addClass(statusClass(status))
                         .toggleClass('table-selected', Number(id) === Number(selectedTableId))
                         .attr('data-table-id', id)
@@ -141,6 +151,7 @@
                     if (status === 'DANG_PHUC_VU') {
                         card.append($('<span class="table-total">').text(money(amount)));
                     }
+                    card.append($('<button type="button" class="table-qr-button">').text('Mã QR'));
 
                     grid.append(card);
                 });
@@ -172,9 +183,39 @@
                 });
             }
 
-            $('#table-grid').on('click', '.table-card', function () {
+            $('#table-grid').on('click', '.table-card', function (event) {
+                if ($(event.target).closest('.table-qr-button').length) return;
                 selectedTableId = Number($(this).attr('data-table-id'));
                 renderTables();
+            });
+
+            $('#table-grid').on('keydown', '.table-card', function (event) {
+                if ((event.key === 'Enter' || event.key === ' ') && !$(event.target).closest('.table-qr-button').length) {
+                    event.preventDefault();
+                    $(this).trigger('click');
+                }
+            });
+
+            $('#table-grid').on('click', '.table-qr-button', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                const card = $(this).closest('.table-card');
+                const id = Number(card.attr('data-table-id'));
+                const selectedTable = tables.find(table => Number(tableId(table)) === id);
+                const guestUrl = new URL('/Home/GuestOrder', window.location.origin);
+                guestUrl.searchParams.set('maBan', id);
+                $('#qr-table-name').text(`Bàn ${tableNumber(selectedTable)}`);
+                $('#guest-order-preview').attr('href', guestUrl.href);
+                $('#table-qr-image').attr('src', `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(guestUrl.href)}`);
+                $('#table-qr-modal').prop('hidden', false);
+            });
+
+            $('#close-qr-modal').on('click', () => $('#table-qr-modal').prop('hidden', true));
+            $('#table-qr-modal').on('click', event => {
+                if (event.target === event.currentTarget) $('#table-qr-modal').prop('hidden', true);
+            });
+            $(document).on('keydown', event => {
+                if (event.key === 'Escape') $('#table-qr-modal').prop('hidden', true);
             });
 
             $('#area-filter').on('change', renderTables);
