@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Ushi Mania</title>
+    <title>@ViewData["Title"] - Ushi Mania POS</title>
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
@@ -11,27 +11,116 @@
     <link rel="stylesheet" href="~/css/reports.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/qr-modal.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/UshiMania.styles.css" asp-append-version="true" />
+    <style>
+        .pos-user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .pos-role-tag {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .role-quanly { background-color: #dc3545; color: #fff; }
+        .role-phucvu { background-color: #0d6efd; color: #fff; }
+        .role-thungan { background-color: #198754; color: #fff; }
+        .role-bep { background-color: #ffc107; color: #000; }
+        .btn-pos-logout {
+            color: #ffc9c9;
+            border: 1px solid rgba(255, 200, 200, 0.4);
+            background: transparent;
+            font-size: 11.5px;
+            padding: 2px 8px;
+            border-radius: 3px;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .btn-pos-logout:hover {
+            color: #fff;
+            background: #dc3545;
+            border-color: #dc3545;
+        }
+    </style>
 </head>
 <body class="pos-shell">
     <header class="pos-header">
-        <a class="pos-brand" asp-area="" asp-controller="Home" asp-action="SoDoBan" aria-label="Ushi Mania - Sơ đồ bàn">
+        <a class="pos-brand" asp-area="" asp-controller="Home" asp-action="@(User.IsInRole("BEP") ? "ManHinhBep" : "SoDoBan")" aria-label="Ushi Mania">
             <span class="pos-brand-mark">UM</span>
             <span>Ushi <strong>Mania</strong></span>
         </a>
+
+        <!-- Điều hướng phân quyền theo từng vai trò nhân viên -->
         <nav class="pos-quick-nav" aria-label="Điều hướng POS">
-            <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Sơ đồ bàn" ? "active" : string.Empty)" asp-controller="Home" asp-action="SoDoBan">Sơ đồ bàn</a>
-            <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Order POS" ? "active" : string.Empty)" asp-controller="Home" asp-action="OrderPOS">Order POS</a>
-            <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Bếp KDS" ? "active" : string.Empty)" asp-controller="Home" asp-action="ManHinhBep">Bếp KDS</a>
-            <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Kho & Báo cáo" ? "active" : string.Empty)" asp-controller="Home" asp-action="KhoBaoCao">Kho &amp; Báo cáo</a>
+            @* Quản lý, Phục vụ, Thu ngân: Sơ đồ bàn & Order POS *@
+            @if (User.IsInRole("QUAN_LY") || User.IsInRole("PHUC_VU") || User.IsInRole("THU_NGAN"))
+            {
+                <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Sơ đồ bàn" ? "active" : string.Empty)" asp-controller="Home" asp-action="SoDoBan">Sơ đồ bàn</a>
+                <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Order POS" ? "active" : string.Empty)" asp-controller="Home" asp-action="OrderPOS">Order POS</a>
+            }
+
+            @* Quản lý, Bếp: Màn hình Bếp KDS *@
+            @if (User.IsInRole("QUAN_LY") || User.IsInRole("BEP"))
+            {
+                <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Bếp KDS" ? "active" : string.Empty)" asp-controller="Home" asp-action="ManHinhBep">Bếp KDS</a>
+            }
+
+            @* Quản lý, Thu ngân, Bếp: Kho & Báo cáo *@
+            @if (User.IsInRole("QUAN_LY") || User.IsInRole("THU_NGAN") || User.IsInRole("BEP"))
+            {
+                <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Kho & Báo cáo" ? "active" : string.Empty)" asp-controller="Home" asp-action="KhoBaoCao">Kho &amp; Báo cáo</a>
+            }
         </nav>
-        <div class="pos-clock" aria-label="Giờ hiện tại">
-            <span>Giờ hiện tại</span>
-            <time id="current-time">--:--:--</time>
+
+        <!-- Thông tin nhân sự đăng nhập & Giờ hệ thống -->
+        <div class="d-flex align-items-center">
+            @if (User.Identity != null && User.Identity.IsAuthenticated)
+            {
+                var roleClass = User.IsInRole("QUAN_LY") ? "role-quanly"
+                              : User.IsInRole("PHUC_VU") ? "role-phucvu"
+                              : User.IsInRole("THU_NGAN") ? "role-thungan"
+                              : User.IsInRole("BEP") ? "role-bep" : "bg-secondary text-white";
+
+                var roleLabel = User.IsInRole("QUAN_LY") ? "Quản lý"
+                              : User.IsInRole("PHUC_VU") ? "Phục vụ"
+                              : User.IsInRole("THU_NGAN") ? "Thu ngân"
+                              : User.IsInRole("BEP") ? "Đầu bếp" : "Nhân viên";
+
+                <div class="pos-user-badge">
+                    <span class="pos-role-tag @roleClass">@roleLabel</span>
+                    <span class="text-white fw-bold d-none d-sm-inline" title="Nhân viên đang đăng nhập">@User.Identity.Name</span>
+                    <a asp-controller="Home" asp-action="Logout" class="btn-pos-logout" title="Đăng xuất / Khóa màn hình POS">
+                        Đăng xuất
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div style="margin-right: 12px;">
+                    <a asp-controller="Home" asp-action="DangNhap" class="btn btn-danger btn-sm py-1 px-3 fw-bold">
+                        Đăng nhập POS
+                    </a>
+                </div>
+            }
+
+            <div class="pos-clock" aria-label="Giờ hiện tại">
+                <span>Giờ hiện tại</span>
+                <time id="current-time">--:--:--</time>
+            </div>
         </div>
     </header>
+
     <main role="main" class="pos-main">
         @RenderBody()
     </main>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
