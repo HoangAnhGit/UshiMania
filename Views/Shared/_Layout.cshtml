@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
@@ -48,34 +48,97 @@
             background: #dc3545;
             border-color: #dc3545;
         }
+
+        /* Kiểu dáng cho các menu bị phân quyền (vẫn hiện nhưng không bấm vào được) */
+        .pos-nav-link.pos-disabled {
+            opacity: 0.42;
+            cursor: not-allowed !important;
+            background: rgba(0, 0, 0, 0.22) !important;
+            color: #9aa0a6 !important;
+            border: 1px dashed rgba(255, 255, 255, 0.2);
+            box-shadow: none !important;
+            user-select: none;
+        }
+        .pos-nav-link.pos-disabled:hover {
+            background: rgba(0, 0, 0, 0.35) !important;
+            color: #adb5bd !important;
+            box-shadow: none !important;
+        }
+        .pos-nav-lock {
+            font-size: 11.5px;
+            margin-left: 4px;
+            opacity: 0.85;
+        }
     </style>
 </head>
 <body class="pos-shell">
+    @{
+        var currentTitle = ViewData["Title"]?.ToString() ?? "";
+        // Định nghĩa quyền hạn:
+        // Quản lý: Tất cả
+        // Phục vụ: Sơ đồ bàn, Order POS
+        // Thu ngân: Sơ đồ bàn, Order POS, Kho & Báo cáo
+        // Bếp: Bếp KDS, Kho & Báo cáo
+        var canAccessSoDoBan = User.IsInRole("QUAN_LY") || User.IsInRole("PHUC_VU") || User.IsInRole("THU_NGAN");
+        var canAccessOrderPOS = User.IsInRole("QUAN_LY") || User.IsInRole("PHUC_VU") || User.IsInRole("THU_NGAN");
+        var canAccessBep = User.IsInRole("QUAN_LY") || User.IsInRole("BEP");
+        var canAccessKho = User.IsInRole("QUAN_LY") || User.IsInRole("THU_NGAN") || User.IsInRole("BEP");
+    }
+
     <header class="pos-header">
         <a class="pos-brand" asp-area="" asp-controller="Home" asp-action="@(User.IsInRole("BEP") ? "ManHinhBep" : "SoDoBan")" aria-label="Ushi Mania">
             <span class="pos-brand-mark">UM</span>
             <span>Ushi <strong>Mania</strong></span>
         </a>
 
-        <!-- Điều hướng phân quyền theo từng vai trò nhân viên -->
+        <!-- Điều hướng POS: Luôn hiển thị đầy đủ, tab không đủ quyền sẽ bị khóa (không bấm được) -->
         <nav class="pos-quick-nav" aria-label="Điều hướng POS">
-            @* Quản lý, Phục vụ, Thu ngân: Sơ đồ bàn & Order POS *@
-            @if (User.IsInRole("QUAN_LY") || User.IsInRole("PHUC_VU") || User.IsInRole("THU_NGAN"))
+            @* 1. Sơ đồ bàn: Quản lý, Phục vụ, Thu ngân được bấm *@
+            @if (canAccessSoDoBan)
             {
-                <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Sơ đồ bàn" ? "active" : string.Empty)" asp-controller="Home" asp-action="SoDoBan">Sơ đồ bàn</a>
-                <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Order POS" ? "active" : string.Empty)" asp-controller="Home" asp-action="OrderPOS">Order POS</a>
+                <a class="pos-nav-link @(currentTitle == "Sơ đồ bàn" ? "active" : string.Empty)" asp-controller="Home" asp-action="SoDoBan">Sơ đồ bàn</a>
+            }
+            else
+            {
+                <a class="pos-nav-link pos-disabled" href="javascript:void(0)" onclick="notifyNoPermission('Sơ đồ bàn')" title="Bạn không có quyền truy cập Sơ đồ bàn" tabindex="-1">
+                    Sơ đồ bàn <span class="pos-nav-lock">🔒</span>
+                </a>
             }
 
-            @* Quản lý, Bếp: Màn hình Bếp KDS *@
-            @if (User.IsInRole("QUAN_LY") || User.IsInRole("BEP"))
+            @* 2. Order POS: Quản lý, Phục vụ, Thu ngân được bấm *@
+            @if (canAccessOrderPOS)
             {
-                <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Bếp KDS" ? "active" : string.Empty)" asp-controller="Home" asp-action="ManHinhBep">Bếp KDS</a>
+                <a class="pos-nav-link @(currentTitle == "Order POS" ? "active" : string.Empty)" asp-controller="Home" asp-action="OrderPOS">Order POS</a>
+            }
+            else
+            {
+                <a class="pos-nav-link pos-disabled" href="javascript:void(0)" onclick="notifyNoPermission('Order POS')" title="Bạn không có quyền truy cập Order POS" tabindex="-1">
+                    Order POS <span class="pos-nav-lock">🔒</span>
+                </a>
             }
 
-            @* Quản lý, Thu ngân, Bếp: Kho & Báo cáo *@
-            @if (User.IsInRole("QUAN_LY") || User.IsInRole("THU_NGAN") || User.IsInRole("BEP"))
+            @* 3. Bếp KDS: Quản lý, Bếp được bấm *@
+            @if (canAccessBep)
             {
-                <a class="pos-nav-link @(ViewData["Title"]?.ToString() == "Kho & Báo cáo" ? "active" : string.Empty)" asp-controller="Home" asp-action="KhoBaoCao">Kho &amp; Báo cáo</a>
+                <a class="pos-nav-link @(currentTitle == "Bếp KDS" ? "active" : string.Empty)" asp-controller="Home" asp-action="ManHinhBep">Bếp KDS</a>
+            }
+            else
+            {
+                <a class="pos-nav-link pos-disabled" href="javascript:void(0)" onclick="notifyNoPermission('Bếp KDS')" title="Bạn không có quyền truy cập Màn hình Bếp KDS" tabindex="-1">
+                    Bếp KDS <span class="pos-nav-lock">🔒</span>
+                </a>
+            }
+
+            @* 4. Kho & Báo cáo: Quản lý, Thu ngân, Bếp được bấm *@
+            @if (canAccessKho)
+            {
+                <a class="pos-nav-link @(currentTitle == "Kho & Báo cáo" ? "active" : string.Empty)" asp-controller="Home" asp-action="KhoBaoCao">Kho &amp; Báo cáo</a>
+            }
+            else
+            {
+                <a class="pos-nav-link pos-disabled" href="javascript:void(0)" onclick="notifyNoPermission('Kho & Báo cáo')" title="Bạn không có quyền truy cập Kho & Báo cáo" tabindex="-1">
+                    Kho &amp; Báo cáo <span class="pos-nav-lock">🔒</span>
+                </a>
             }
         </nav>
 
@@ -126,6 +189,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
+        // Cập nhật đồng hồ thời gian thực
         (() => {
             const clock = document.getElementById('current-time');
             const updateClock = () => clock.textContent = new Intl.DateTimeFormat('vi-VN', {
@@ -134,6 +198,21 @@
             updateClock();
             window.setInterval(updateClock, 1000);
         })();
+
+        // Thông báo khi nhấp vào menu bị khóa quyền
+        function notifyNoPermission(featureName) {
+            let toast = document.getElementById('pos-perm-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'pos-perm-toast';
+                toast.style.cssText = 'position:fixed;top:55px;left:50%;transform:translateX(-50%);background:#b02a37;color:#fff;padding:8px 18px;border-radius:20px;font-size:13px;font-weight:600;z-index:99999;box-shadow:0 4px 15px rgba(0,0,0,0.35);display:flex;align-items:center;gap:8px;border:1px solid #f5c2c7;';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = '🔒 Tài khoản của bạn không có quyền truy cập vào <b>' + featureName + '</b>';
+            toast.style.display = 'flex';
+            clearTimeout(window.permToastTimer);
+            window.permToastTimer = setTimeout(() => { toast.style.display = 'none'; }, 2500);
+        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
