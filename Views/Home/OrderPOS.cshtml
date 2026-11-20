@@ -95,7 +95,7 @@
             <button type="button" class="order-main-button action-blue" id="send-order">Đặt món<br /><small>Gửi bếp</small></button>
             <button type="button" class="order-main-button action-orange" id="subtotal-preview">Tạm tính<br /><small>In bill</small></button>
             <button type="button" class="order-main-button action-red" id="open-payment">Thanh toán</button>
-            <button type="button" class="order-main-button action-green" id="confirm-selection">&#10003;</button>
+            <button type="button" class="order-main-button action-green" id="confirm-selection" title="Xác nhận đặt món và gửi bếp">&#10003;</button>
             <button type="button" class="order-main-button action-red" id="cancel-action">&times;</button>
         </div>
     </aside>
@@ -564,10 +564,34 @@
                     .fail(() => notify('Không thể tải danh sách bàn.', true));
             }
 
+            function resetToDefaultScreen() {
+                currentOrder = null;
+                draftItems = [];
+                activeSelection = null;
+                discount = 0;
+                quantity = '1';
+                setEntryMode('quantity');
+
+                $('#order-table-select').val('');
+                $('#opened-at').text('--:--');
+                $('#current-order-label').text('Chưa chọn bàn');
+                $('#selected-menu-item').text('Chưa chọn món');
+                $('#selected-quantity').text('1');
+                $('#dish-note').val('');
+
+                $('#payment-panel').prop('hidden', true);
+                $('#category-grid, #menu-grid').prop('hidden', false);
+                $('#back-to-menu').prop('hidden', true);
+
+                renderLines();
+                updateTotals();
+                loadTables();
+            }
+
             function sendDraftOrderToKitchen() {
                 const tableId = selectedTableId();
                 if (!tableId) {
-                    notify('Vui lòng chọn bàn trước khi gửi bếp.', true);
+                    notify('Vui lòng chọn bàn trước khi xác nhận đặt món.', true);
                     return;
                 }
 
@@ -575,7 +599,7 @@
                     if (currentOrder && (readValue(currentOrder, 'chiTiet', 'ChiTiet')?.length > 0)) {
                         notify('Tất cả các món đã được gửi cho bếp rồi.');
                     } else {
-                        notify('Vui lòng chọn ít nhất một món trước khi gửi bếp.', true);
+                        notify('Vui lòng chọn ít nhất một món trước khi xác nhận đặt món.', true);
                     }
                     return;
                 }
@@ -601,12 +625,8 @@
                         return;
                     }
                     const count = draftItems.length;
-                    draftItems = [];
-                    activeSelection = null;
-                    $('#dish-note').val('');
-                    $('#selected-menu-item').text('Chưa chọn món');
-                    notify(`Đã gửi ${count} món cho bếp thành công!`);
-                    loadTables();
+                    notify(`Đã xác nhận đặt ${count} món và gửi bếp thành công! Chuyển về chọn bàn khác.`);
+                    resetToDefaultScreen();
                 }).fail(xhr => notify(xhr.responseJSON?.message || 'Không thể gửi món cho bếp.', true));
             }
 
@@ -671,13 +691,8 @@
                         notify(response?.message || 'Thanh toán thất bại.', true);
                         return;
                     }
-                    currentOrder = null;
-                    draftItems = [];
-                    discount = 0;
-                    $('#payment-panel').prop('hidden', true);
-                    $('#category-grid, #menu-grid').prop('hidden', false);
                     notify('Thanh toán và hoàn tất đơn hàng thành công!');
-                    loadTables();
+                    resetToDefaultScreen();
                 }).fail(xhr => notify(xhr.responseJSON?.message || 'Thanh toán thất bại.', true));
             }
 
@@ -763,12 +778,8 @@
                     return;
                 }
 
-                // Nếu đang chọn món đã lưu (chờ nấu), cập nhật số lượng lên server
-                if (activeSelection?.type === 'saved' && activeSelection.item?.isChoNau) {
-                    const parsed = Math.max(1, parseInt(quantity || '1', 10));
-                    updateSavedItemQuantity(activeSelection.item.maChiTiet, parsed);
-                    return;
-                }
+                // Bấm dấu tích v màu xanh là xác nhận đặt món và tự động gửi đơn cho bếp, sau đó quay về mặc định để chọn bàn khác
+                sendDraftOrderToKitchen();
             });
 
             $('#cancel-action').on('click', function () {
