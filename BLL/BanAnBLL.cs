@@ -40,23 +40,43 @@ public sealed class BanAnBLL
         return banAnDAL.ChangeStatus(tableId, status);
     }
 
-    public bool MergeOrTransferTables(int sourceTableId, int targetTableId)
+    public bool ChuyenBan(int maBanNguon, int maBanDich)
     {
-        if (sourceTableId <= 0)
+        if (maBanNguon <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(sourceTableId), "Mã bàn phải là số dương.");
+            throw new ArgumentOutOfRangeException(nameof(maBanNguon), "Mã bàn nguồn phải là số dương.");
         }
 
-        if (targetTableId <= 0)
+        if (maBanDich <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(targetTableId), "Mã bàn phải là số dương.");
+            throw new ArgumentOutOfRangeException(nameof(maBanDich), "Mã bàn đích phải là số dương.");
         }
 
-        if (sourceTableId == targetTableId)
+        if (maBanNguon == maBanDich)
         {
             throw new ArgumentException("Bàn nguồn và bàn đích phải khác nhau.");
         }
 
-        return banAnDAL.MergeOrTransfer(sourceTableId, targetTableId);
+        return banAnDAL.ChuyenBan(maBanNguon, maBanDich);
+    }
+
+    public bool GopBan(int maBanNguon, int maBanDich)
+    {
+        if (maBanNguon <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maBanNguon), "Mã bàn nguồn phải là số dương.");
+        }
+
+        if (maBanDich <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maBanDich), "Mã bàn đích phải là số dương.");
+        }
+
+        if (maBanNguon == maBanDich)
+        {
+            throw new ArgumentException("Bàn nguồn và bàn đích phải khác nhau.");
+        }
+
+        return banAnDAL.GopBan(maBanNguon, maBanDich);
     }
 }

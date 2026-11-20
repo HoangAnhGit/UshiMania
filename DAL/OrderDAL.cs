@@ -1,4 +1,5 @@
 using System.Data;
+using Microsoft.Data.SqlClient;
 using UshiMania.Models;
 
 namespace UshiMania.DAL;
@@ -166,6 +167,236 @@ public sealed class OrderDAL
             transaction.Rollback();
             throw;
         }
+    }
+
+    public bool CapNhatChiTietOrder(int detailId, int quantity, string? note)
+    {
+        if (quantity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be positive.");
+        }
+
+        if (note?.Length > 200)
+        {
+            throw new ArgumentException("Dish note cannot exceed 200 characters.", nameof(note));
+        }
+
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+
+        try
+        {
+            const string lockDetailSql = """
+                SELECT ct.ma_don_hang, COALESCE(ct.tien_do_bep, 'CHO_NAU')
+                FROM chi_tiet_don_hang AS ct WITH (UPDLOCK, HOLDLOCK)
+                INNER JOIN don_hang AS d WITH (UPDLOCK, HOLDLOCK)
+                    ON d.ma_don_hang = ct.ma_don_hang
+                WHERE ct.ma_chi_tiet = @ma_chi_tiet
+                  AND d.trang_thai_don = @trang_thai_don;
+                """;
+
+            int? orderId = null;
+            string? kitchenProgress = null;
+            using (var lockCommand = dbHelper.CreateCommand(connection, lockDetailSql, transaction))
+            {
+                lockCommand.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+                lockCommand.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                using var reader = lockCommand.ExecuteReader();
+                if (reader.Read())
+                {
+                    orderId = reader.GetInt32(0);
+                    kitchenProgress = reader.GetString(1);
+                }
+            }
+
+            if (!orderId.HasValue || kitchenProgress is null)
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            if (kitchenProgress != "CHO_NAU")
+            {
+                throw new OrderItemCannotBeModifiedException();
+            }
+
+            const string updateDetailSql = """
+                UPDATE chi_tiet_don_hang
+                SET so_luong = @so_luong,
+                    ghi_chu_mon = @ghi_chu_mon
+                WHERE ma_chi_tiet = @ma_chi_tiet
+                  AND ma_don_hang = @ma_don_hang;
+                """;
+
+            using (var updateDetailCommand = dbHelper.CreateCommand(connection, updateDetailSql, transaction))
+            {
+                updateDetailCommand.Parameters.AddWithValue("@so_luong", quantity);
+                updateDetailCommand.Parameters.AddWithValue("@ghi_chu_mon", (object?)note ?? DBNull.Value);
+                updateDetailCommand.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+                updateDetailCommand.Parameters.AddWithValue("@ma_don_hang", orderId.Value);
+                if (updateDetailCommand.ExecuteNonQuery() != 1 || !RecalculateOrderTotal(connection, transaction, orderId.Value))
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+            }
+
+            transaction.Commit();
+            return true;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    public bool XoaChiTietOrder(int detailId)
+    {
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+
+        try
+        {
+            const string lockDetailSql = """
+                SELECT ct.ma_don_hang, d.ma_ban, COALESCE(ct.tien_do_bep, 'CHO_NAU')
+                FROM chi_tiet_don_hang AS ct WITH (UPDLOCK, HOLDLOCK)
+                INNER JOIN don_hang AS d WITH (UPDLOCK, HOLDLOCK)
+                    ON d.ma_don_hang = ct.ma_don_hang
+                WHERE ct.ma_chi_tiet = @ma_chi_tiet
+                  AND d.trang_thai_don = @trang_thai_don;
+                """;
+
+            int? orderId = null;
+            int? tableId;
+            string? kitchenProgress = null;
+            using (var lockCommand = dbHelper.CreateCommand(connection, lockDetailSql, transaction))
+            {
+                lockCommand.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+                lockCommand.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                using var reader = lockCommand.ExecuteReader();
+                if (reader.Read())
+                {
+                    orderId = reader.GetInt32(0);
+                    tableId = reader.IsDBNull(1) ? null : reader.GetInt32(1);
+                    kitchenProgress = reader.GetString(2);
+                }
+                else
+                {
+                    tableId = null;
+                }
+            }
+
+            if (!orderId.HasValue || kitchenProgress is null)
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            if (kitchenProgress != "CHO_NAU")
+            {
+                throw new OrderItemCannotBeDeletedException();
+            }
+
+            const string deleteDetailSql = """
+                DELETE FROM chi_tiet_don_hang
+                WHERE ma_chi_tiet = @ma_chi_tiet
+                  AND ma_don_hang = @ma_don_hang;
+                """;
+
+            using (var deleteDetailCommand = dbHelper.CreateCommand(connection, deleteDetailSql, transaction))
+            {
+                deleteDetailCommand.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+                deleteDetailCommand.Parameters.AddWithValue("@ma_don_hang", orderId.Value);
+                if (deleteDetailCommand.ExecuteNonQuery() != 1 || !RecalculateOrderTotal(connection, transaction, orderId.Value))
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+            }
+
+            const string remainingDetailsSql = """
+                SELECT COUNT(1)
+                FROM chi_tiet_don_hang WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_don_hang = @ma_don_hang;
+                """;
+
+            using (var remainingDetailsCommand = dbHelper.CreateCommand(connection, remainingDetailsSql, transaction))
+            {
+                remainingDetailsCommand.Parameters.AddWithValue("@ma_don_hang", orderId.Value);
+                if (Convert.ToInt32(remainingDetailsCommand.ExecuteScalar()) == 0)
+                {
+                    const string closeOrderSql = """
+                        UPDATE don_hang
+                        SET trang_thai_don = N'DA_HUY', tong_tien_tam = 0
+                        WHERE ma_don_hang = @ma_don_hang
+                          AND trang_thai_don = @trang_thai_don;
+                        """;
+
+                    using (var closeOrderCommand = dbHelper.CreateCommand(connection, closeOrderSql, transaction))
+                    {
+                        closeOrderCommand.Parameters.AddWithValue("@ma_don_hang", orderId.Value);
+                        closeOrderCommand.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                        if (closeOrderCommand.ExecuteNonQuery() != 1)
+                        {
+                            transaction.Rollback();
+                            return false;
+                        }
+                    }
+
+                    if (tableId.HasValue)
+                    {
+                        const string releaseTableSql = """
+                            UPDATE ban_an
+                            SET trang_thai = CASE
+                                WHEN EXISTS (
+                                    SELECT 1
+                                    FROM don_hang
+                                    WHERE don_hang.ma_ban = ban_an.ma_ban
+                                      AND don_hang.trang_thai_don = @trang_thai_don
+                                ) THEN N'DANG_PHUC_VU'
+                                ELSE N'TRONG'
+                            END
+                            WHERE ma_ban = @ma_ban;
+                            """;
+
+                        using var releaseTableCommand = dbHelper.CreateCommand(connection, releaseTableSql, transaction);
+                        releaseTableCommand.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                        releaseTableCommand.Parameters.AddWithValue("@ma_ban", tableId.Value);
+                        releaseTableCommand.ExecuteNonQuery();
+                    }
+                }
+            }
+
+            transaction.Commit();
+            return true;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
+
+    private bool RecalculateOrderTotal(SqlConnection connection, SqlTransaction transaction, int orderId)
+    {
+        const string sql = """
+            UPDATE don_hang
+            SET tong_tien_tam = ISNULL((
+                SELECT SUM(CAST(so_luong AS DECIMAL(18, 2)) * don_gia_luc_goi)
+                FROM chi_tiet_don_hang
+                WHERE ma_don_hang = @ma_don_hang
+            ), 0)
+            WHERE ma_don_hang = @ma_don_hang
+              AND trang_thai_don = @trang_thai_don;
+            """;
+
+        using var command = dbHelper.CreateCommand(connection, sql, transaction);
+        command.Parameters.AddWithValue("@ma_don_hang", orderId);
+        command.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+        return command.ExecuteNonQuery() == 1;
     }
 
     public int? AddGuestOrder(int tableId, IReadOnlyList<GuestOrderItemRequest> items)
@@ -382,7 +613,8 @@ public sealed class OrderDAL
 
         const string detailsSql = """
             SELECT ct.ma_chi_tiet, ct.ma_mon_an, m.ten_mon_an,
-                   ct.so_luong, ct.don_gia_luc_goi, ct.ghi_chu_mon
+                   ct.so_luong, ct.don_gia_luc_goi, ct.ghi_chu_mon,
+                   COALESCE(ct.tien_do_bep, 'CHO_NAU')
             FROM chi_tiet_don_hang AS ct
             INNER JOIN mon_an AS m ON m.ma_mon_an = ct.ma_mon_an
             WHERE ct.ma_don_hang = @ma_don_hang
@@ -401,7 +633,8 @@ public sealed class OrderDAL
                 TenMonAn = detailsReader.GetString(2),
                 SoLuong = detailsReader.GetInt32(3),
                 DonGia = detailsReader.GetDecimal(4),
-                GhiChuMon = detailsReader.IsDBNull(5) ? null : detailsReader.GetString(5)
+                GhiChuMon = detailsReader.IsDBNull(5) ? null : detailsReader.GetString(5),
+                TienDoBep = detailsReader.GetString(6)
             });
         }
 
@@ -468,3 +701,9 @@ public sealed class OrderDAL
         return command.ExecuteNonQuery() == 1;
     }
 }
+
+public sealed class OrderItemCannotBeDeletedException()
+    : InvalidOperationException("Kh\u00f4ng th\u1ec3 x\u00f3a m\u00f3n \u0111\u00e3 \u0111\u01b0\u1ee3c b\u1ebfp ti\u1ebfp nh\u1eadn ch\u1ebf bi\u1ebfn!");
+
+public sealed class OrderItemCannotBeModifiedException()
+    : InvalidOperationException("Kh\u00f4ng th\u1ec3 s\u1eeda m\u00f3n \u0111\u00e3 \u0111\u01b0\u1ee3c b\u1ebfp ti\u1ebfp nh\u1eadn ch\u1ebf bi\u1ebfn!");

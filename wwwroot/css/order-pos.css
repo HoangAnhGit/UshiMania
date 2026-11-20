@@ -1,0 +1,116 @@
+#order-pos .order-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+#order-pos .order-line {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    padding: 0.85rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+}
+
+#order-pos .order-line-main {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+}
+
+#order-pos .order-line-note,
+#order-pos .order-line-kitchen-status,
+#order-pos .order-line-actions,
+#order-pos .order-line-editor {
+    grid-column: 1 / -1;
+}
+
+#order-pos .order-line-note {
+    color: #64748b;
+    font-size: 0.85rem;
+    overflow-wrap: anywhere;
+}
+
+#order-pos .order-line-kitchen-status {
+    justify-self: start;
+}
+
+#order-pos .order-line-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding-top: 0.25rem;
+    border-top: 1px solid #eef0f3;
+}
+
+#order-pos .order-line-actions .btn {
+    min-width: 5.25rem;
+    border-radius: 0.5rem;
+}
+
+#order-pos .order-line-editor {
+    padding: 0.75rem;
+    border: 1px solid #dbeafe;
+    border-radius: 0.65rem;
+    background: #f8fbff;
+}
+
+#order-pos .order-line-editor textarea {
+    resize: vertical;
+}
+
+.vietqr-demo-modal .modal-content {
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: 0 1rem 3rem rgba(15, 23, 42, 0.22);
+}
+
+.vietqr-demo-modal .modal-header {
+    border-bottom-color: #eef0f3;
+}
+
+.vietqr-demo-image {
+    display: block;
+    width: min(100%, 280px);
+    aspect-ratio: 1;
+    margin: 0 auto 1rem;
+    padding: 0.65rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.85rem;
+    background: #fff;
+    image-rendering: pixelated;
+}
+
+.vietqr-total-card {
+    padding: 0.85rem 1rem;
+    border-radius: 0.75rem;
+    background: #f0fdf4;
+    color: #14532d;
+}
+
+.vietqr-total-card strong {
+    display: block;
+    font-size: 1.35rem;
+}
+
+.vietqr-amount-words {
+    margin: 0.65rem 0 0;
+    color: #475569;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+@media (max-width: 576px) {
+    #order-pos .order-line {
+        padding: 0.7rem;
+    }
+
+    .vietqr-demo-modal .modal-dialog {
+        margin: 0.75rem;
+    }
+}

@@ -100,6 +100,27 @@
     </section>
 </div>
 
+<div class="modal fade" id="table-operation-modal" tabindex="-1" aria-labelledby="table-operation-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="table-operation-title"></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="&#272;&#243;ng"></button>
+            </div>
+            <div class="modal-body">
+                <p id="table-operation-description" class="mb-3"></p>
+                <label for="table-target-select" class="form-label">B&#224;n &#273;&#237;ch</label>
+                <select id="table-target-select" class="form-select"></select>
+                <div id="table-operation-error" class="alert alert-danger mt-3 mb-0" role="alert" hidden></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">H&#7911;y</button>
+                <button type="button" class="btn btn-primary" id="confirm-table-operation"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(function () {
@@ -313,8 +334,76 @@
                 });
             });
 
-            $('#transfer-table, #merge-table').on('click', function () {
-                showMessage('Chức năng chuyển/gộp bàn đang được cập nhật.', true);
+            let tableOperation = null;
+            const tableOperationModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('table-operation-modal'));
+
+            function openTableOperation(operation) {
+                if (!selectedTableId) {
+                    showMessage('Vui l\u00f2ng ch\u1ecdn b\u00e0n ngu\u1ed3n tr\u01b0\u1edbc.', true);
+                    return;
+                }
+
+                const sourceTable = tables.find(table => Number(tableId(table)) === Number(selectedTableId));
+                if (!sourceTable) {
+                    showMessage('Kh\u00f4ng t\u00ecm th\u1ea5y b\u00e0n ngu\u1ed3n. Vui l\u00f2ng t\u1ea3i l\u1ea1i danh s\u00e1ch.', true);
+                    return;
+                }
+
+                tableOperation = operation;
+                const isTransfer = operation === 'transfer';
+                const requiredStatus = isTransfer ? 'TRONG' : 'DANG_PHUC_VU';
+                const targets = tables.filter(table =>
+                    Number(tableId(table)) !== Number(selectedTableId) &&
+                    normalizeStatus(readValue(table, 'trangThai', 'TrangThai')) === requiredStatus);
+                const targetSelect = $('#table-target-select').empty();
+                targets.forEach(table => {
+                    targetSelect.append($('<option>').val(tableId(table)).text(`${tableNumber(table)} - ${tableArea(table)}`));
+                });
+
+                $('#table-operation-title').text(isTransfer ? 'Chuy\u1ec3n b\u00e0n' : 'G\u1ed9p b\u00e0n');
+                $('#table-operation-description').text(isTransfer
+                    ? `Chuy\u1ec3n \u0111\u01a1n m\u1edf t\u1eeb ${tableNumber(sourceTable)} sang b\u00e0n tr\u1ed1ng.`
+                    : `G\u1ed9p to\u00e0n b\u1ed9 m\u00f3n t\u1eeb ${tableNumber(sourceTable)} v\u00e0o \u0111\u01a1n c\u1ee7a b\u00e0n \u0111\u00edch.`);
+                $('#confirm-table-operation').text(isTransfer ? 'X\u00e1c nh\u1eadn chuy\u1ec3n b\u00e0n' : 'X\u00e1c nh\u1eadn g\u1ed9p b\u00e0n')
+                    .prop('disabled', targets.length === 0);
+                $('#table-operation-error')
+                    .text(targets.length ? '' : (isTransfer ? 'Kh\u00f4ng c\u00f3 b\u00e0n tr\u1ed1ng.' : 'Kh\u00f4ng c\u00f3 b\u00e0n \u0111ang ph\u1ee5c v\u1ee5 \u0111\u1ec3 g\u1ed9p v\u00e0o.'))
+                    .prop('hidden', targets.length > 0);
+                tableOperationModal.show();
+            }
+
+            $('#transfer-table').on('click', () => openTableOperation('transfer'));
+            $('#merge-table').on('click', () => openTableOperation('merge'));
+
+            $('#confirm-table-operation').on('click', function () {
+                const targetTableId = Number($('#table-target-select').val() || 0);
+                if (!selectedTableId || !targetTableId || !tableOperation) {
+                    $('#table-operation-error').text('Vui l\u00f2ng ch\u1ecdn b\u00e0n \u0111\u00edch h\u1ee3p l\u1ec7.').prop('hidden', false);
+                    return;
+                }
+
+                const isTransfer = tableOperation === 'transfer';
+                const button = $(this).prop('disabled', true);
+                $.ajax({
+                    url: isTransfer ? '/api/restaurant/ban/chuyen' : '/api/restaurant/ban/gop',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maBanNguon: selectedTableId, maBanDich: targetTableId })
+                }).done(response => {
+                    if (!response?.success) {
+                        $('#table-operation-error').text(response?.message || 'Thao t\u00e1c b\u00e0n th\u1ea5t b\u1ea1i.').prop('hidden', false);
+                        return;
+                    }
+
+                    tableOperationModal.hide();
+                    showMessage(response.message || (isTransfer ? 'Chuy\u1ec3n b\u00e0n th\u00e0nh c\u00f4ng.' : 'G\u1ed9p b\u00e0n th\u00e0nh c\u00f4ng.'));
+                    loadTables();
+                }).fail(xhr => {
+                    const message = xhr.responseJSON?.message || 'Kh\u00f4ng th\u1ec3 k\u1ebft n\u1ed1i API thao t\u00e1c b\u00e0n.';
+                    $('#table-operation-error').text(message).prop('hidden', false);
+                    showMessage(message, true);
+                }).always(() => button.prop('disabled', $('#table-target-select option').length === 0));
             });
 
             loadTables();

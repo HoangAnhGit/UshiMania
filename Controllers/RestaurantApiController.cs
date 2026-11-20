@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using QRCoder;
 using UshiMania.BLL;
 using UshiMania.DAL;
 using UshiMania.Hubs;
@@ -76,6 +77,92 @@ public sealed class RestaurantApiController : Controller
         catch (Exception exception)
         {
             return HandleError(exception, nameof(CapNhatTrangThaiBan));
+        }
+    }
+
+    [HttpPost("ban/chuyen")]
+    public async Task<IActionResult> ChuyenBan([FromBody] ChuyenGopBanRequest? request)
+    {
+        try
+        {
+            if (request is null)
+            {
+                return Json(new { success = false, message = "Thi\u1ebfu th\u00f4ng tin b\u00e0n ngu\u1ed3n ho\u1eb7c b\u00e0n \u0111\u00edch." });
+            }
+
+            var success = banAnBLL.ChuyenBan(request.MaBanNguon, request.MaBanDich);
+            if (success)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "table-transferred",
+                    sourceTableId = request.MaBanNguon,
+                    targetTableId = request.MaBanDich
+                });
+            }
+
+            return Json(new
+            {
+                success,
+                message = success
+                    ? "Chuy\u1ec3n b\u00e0n th\u00e0nh c\u00f4ng."
+                    : "Kh\u00f4ng th\u1ec3 chuy\u1ec3n b\u00e0n: b\u00e0n ngu\u1ed3n ch\u01b0a c\u00f3 \u0111\u01a1n m\u1edf ho\u1eb7c b\u00e0n \u0111\u00edch kh\u00f4ng tr\u1ed1ng."
+            });
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Error in {ActionName}.", nameof(ChuyenBan));
+            Response.StatusCode = exception is ArgumentException
+                ? StatusCodes.Status400BadRequest
+                : StatusCodes.Status500InternalServerError;
+            return Json(new
+            {
+                success = false,
+                message = exception is ArgumentException ? exception.Message : "\u0110\u00e3 x\u1ea3y ra l\u1ed7i khi chuy\u1ec3n b\u00e0n."
+            });
+        }
+    }
+
+    [HttpPost("ban/gop")]
+    public async Task<IActionResult> GopBan([FromBody] ChuyenGopBanRequest? request)
+    {
+        try
+        {
+            if (request is null)
+            {
+                return Json(new { success = false, message = "Thi\u1ebfu th\u00f4ng tin b\u00e0n ngu\u1ed3n ho\u1eb7c b\u00e0n \u0111\u00edch." });
+            }
+
+            var success = banAnBLL.GopBan(request.MaBanNguon, request.MaBanDich);
+            if (success)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "tables-merged",
+                    sourceTableId = request.MaBanNguon,
+                    targetTableId = request.MaBanDich
+                });
+            }
+
+            return Json(new
+            {
+                success,
+                message = success
+                    ? "G\u1ed9p b\u00e0n th\u00e0nh c\u00f4ng."
+                    : "Kh\u00f4ng th\u1ec3 g\u1ed9p b\u00e0n: c\u1ea3 hai b\u00e0n ph\u1ea3i c\u00f3 \u0111\u01a1n m\u1edf."
+            });
+        }
+        catch (Exception exception)
+        {
+            logger.LogError(exception, "Error in {ActionName}.", nameof(GopBan));
+            Response.StatusCode = exception is ArgumentException
+                ? StatusCodes.Status400BadRequest
+                : StatusCodes.Status500InternalServerError;
+            return Json(new
+            {
+                success = false,
+                message = exception is ArgumentException ? exception.Message : "\u0110\u00e3 x\u1ea3y ra l\u1ed7i khi g\u1ed9p b\u00e0n."
+            });
         }
     }
 
@@ -159,6 +246,75 @@ public sealed class RestaurantApiController : Controller
         catch (Exception exception)
         {
             return HandleError(exception, nameof(TaoHoacCapNhatOrder));
+        }
+    }
+
+    [HttpPut("order/chi-tiet")]
+    public async Task<IActionResult> CapNhatChiTietOrder([FromBody] CapNhatChiTietOrderRequest? request)
+    {
+        try
+        {
+            if (request is null)
+            {
+                return Json(new { success = false, message = "Thi\u1ebfu d\u1eef li\u1ec7u m\u00f3n c\u1ea7n s\u1eeda.", data = (object?)null });
+            }
+
+            var updated = orderBLL.CapNhatChiTietOrder(request.MaChiTiet, request.SoLuongMoi, request.GhiChuMoi);
+            if (updated)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "order-item-updated",
+                    detailId = request.MaChiTiet
+                });
+            }
+
+            return Json(new
+            {
+                success = updated,
+                message = updated ? "C\u1eadp nh\u1eadt m\u00f3n th\u00e0nh c\u00f4ng." : "Kh\u00f4ng t\u00ecm th\u1ea5y m\u00f3n trong \u0111\u01a1n \u0111ang m\u1edf.",
+                data = updated
+            });
+        }
+        catch (OrderItemCannotBeModifiedException exception)
+        {
+            return Json(new { success = false, message = exception.Message, data = (object?)null });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(CapNhatChiTietOrder));
+        }
+    }
+
+    [HttpDelete("order/chi-tiet/{maChiTiet:int}")]
+    public async Task<IActionResult> XoaChiTietOrder([FromRoute] int maChiTiet)
+    {
+        try
+        {
+            var deleted = orderBLL.XoaChiTietOrder(maChiTiet);
+            if (deleted)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "order-item-deleted",
+                    detailId = maChiTiet
+                });
+            }
+
+            return Json(new
+            {
+                success = deleted,
+                message = deleted ? "X\u00f3a m\u00f3n th\u00e0nh c\u00f4ng." : "Kh\u00f4ng t\u00ecm th\u1ea5y m\u00f3n trong \u0111\u01a1n \u0111ang m\u1edf.",
+                data = deleted
+            });
+        }
+        catch (OrderItemCannotBeDeletedException exception)
+        {
+            return Json(new { success = false, message = exception.Message, data = (object?)null });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(XoaChiTietOrder));
         }
     }
 
@@ -364,6 +520,21 @@ public sealed class RestaurantApiController : Controller
         {
             return HandleError(exception, nameof(GetMonBanChay));
         }
+    }
+
+    [HttpGet("qr")]
+    public IActionResult GetQr([FromQuery] string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text) || text.Length > 1000)
+        {
+            return BadRequest(new { success = false, message = "N\u1ed9i dung m\u00e3 QR kh\u00f4ng h\u1ee3p l\u1ec7." });
+        }
+
+        using var generator = new QRCodeGenerator();
+        using var qrData = generator.CreateQrCode(text, QRCodeGenerator.ECCLevel.Q, forceUtf8: true);
+        var image = new PngByteQRCode(qrData).GetGraphic(8);
+        Response.Headers.CacheControl = "no-store";
+        return File(image, "image/png");
     }
 
     [HttpGet("reports/inventory-history")]

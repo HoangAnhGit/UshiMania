@@ -6,6 +6,12 @@ public sealed class CapNhatTrangThaiBanRequest
     public string TrangThai { get; set; } = string.Empty;
 }
 
+public sealed class ChuyenGopBanRequest
+{
+    public int MaBanNguon { get; set; }
+    public int MaBanDich { get; set; }
+}
+
 public sealed class TaoHoacCapNhatOrderRequest
 {
     public int? MaBan { get; set; }
@@ -14,6 +20,13 @@ public sealed class TaoHoacCapNhatOrderRequest
     public int? MaMonAn { get; set; }
     public int? SoLuong { get; set; }
     public string? GhiChuMon { get; set; }
+}
+
+public sealed class CapNhatChiTietOrderRequest
+{
+    public int MaChiTiet { get; set; }
+    public int SoLuongMoi { get; set; }
+    public string? GhiChuMoi { get; set; }
 }
 
 public sealed class CapNhatTienDoBepRequest

@@ -1,16 +1,8 @@
-@using Microsoft.Extensions.Configuration
-@inject IConfiguration Configuration
 @{
     ViewData["Title"] = "Order POS";
-    var vietQrBankId = Configuration["VietQr:BankId"] ?? string.Empty;
-    var vietQrAccountNumber = Configuration["VietQr:AccountNumber"] ?? string.Empty;
-    var vietQrAccountName = Configuration["VietQr:AccountName"] ?? string.Empty;
 }
 
-<div id="order-pos" class="order-pos-layout"
-     data-bank-id="@vietQrBankId"
-     data-account-number="@vietQrAccountNumber"
-     data-account-name="@vietQrAccountName">
+<div id="order-pos" class="order-pos-layout">
     <section class="order-left-column">
         <header class="order-ticket-header">
             <div class="order-table-select">
@@ -64,10 +56,6 @@
                 <button type="button" class="payment-method" data-method="VIETQR">Chuyển khoản VietQR</button>
                 <button type="button" class="payment-method" data-method="THE_NGAN_HANG">Cà thẻ</button>
             </div>
-            <div id="vietqr-box" class="vietqr-box" hidden>
-                <img id="vietqr-image" alt="Mã thanh toán VietQR" />
-                <div id="vietqr-caption"></div>
-            </div>
             <p id="payment-hint" class="payment-hint">Vui lòng chọn phương thức thanh toán.</p>
         </section>
     </section>
@@ -112,20 +100,43 @@
 
 <div id="pos-message" class="pos-toast" role="status" aria-live="polite"></div>
 
+<div class="modal fade vietqr-demo-modal" id="vietqr-payment-modal" tabindex="-1" aria-labelledby="vietqr-payment-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="vietqr-payment-title">Chuy&#7875;n kho&#7843;n VietQR</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="&#272;&#243;ng"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="vietqr-table-label" class="text-secondary mb-2"></p>
+                <img id="vietqr-image" class="vietqr-demo-image" alt="M&#227; QR thanh to&#225;n n&#7897;i b&#7897; Ushi Mania" />
+                <div class="vietqr-total-card text-start">
+                    <div>T&#7841;m t&#237;nh: <span id="vietqr-subtotal"></span></div>
+                    <div>VAT 8%: <span id="vietqr-vat"></span></div>
+                    <div>Gi&#7843;m gi&#225;: <span id="vietqr-discount"></span></div>
+                    <div class="mt-2">T&#7893;ng c&#7847;n nh&#7853;n:</div>
+                    <strong id="vietqr-amount-number"></strong>
+                    <p id="vietqr-amount-words" class="vietqr-amount-words"></p>
+                </div>
+                <div id="vietqr-caption" class="small text-secondary mt-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Quay l&#7841;i</button>
+                <button type="button" class="btn btn-success" id="confirm-vietqr-payment">X&#225;c nh&#7853;n &#273;&#227; nh&#7853;n chuy&#7875;n kho&#7843;n</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(function () {
-            const root = $('#order-pos');
-            const qrConfig = {
-                bankId: root.attr('data-bank-id') || '',
-                accountNumber: root.attr('data-account-number') || '',
-                accountName: root.attr('data-account-name') || ''
-            };
             let tables = [];
             let categories = [];
             let currentOrder = null;
             let activeCategoryId = null;
             let selectedItem = null;
+            let editingDetailId = null;
             let quantity = '1';
             let discount = 0;
             let entryMode = 'quantity';
@@ -139,6 +150,56 @@
             const payable = () => Math.max(0, subtotal() + vat() - discount);
             const orderId = () => readValue(currentOrder, 'maDonHang', 'MaDonHang');
             const selectedTableId = () => Number($('#order-table-select').val() || 0);
+            const paymentQrModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('vietqr-payment-modal'));
+
+            function spellThreeDigits(value, forceHundreds) {
+                const digits = ['kh\u00f4ng', 'm\u1ed9t', 'hai', 'ba', 'b\u1ed1n', 'n\u0103m', 's\u00e1u', 'b\u1ea3y', 't\u00e1m', 'ch\u00edn'];
+                const hundreds = Math.floor(value / 100);
+                const tens = Math.floor((value % 100) / 10);
+                const units = value % 10;
+                const words = [];
+
+                if (hundreds > 0 || forceHundreds) words.push(digits[hundreds], 'tr\u0103m');
+                if (tens > 1) {
+                    words.push(digits[tens], 'm\u01b0\u01a1i');
+                    if (units === 1) words.push('m\u1ed1t');
+                    else if (units === 4) words.push('t\u01b0');
+                    else if (units === 5) words.push('l\u0103m');
+                    else if (units > 0) words.push(digits[units]);
+                } else if (tens === 1) {
+                    words.push('m\u01b0\u1eddi');
+                    if (units === 5) words.push('l\u0103m');
+                    else if (units > 0) words.push(digits[units]);
+                } else if (units > 0) {
+                    if (hundreds > 0 || forceHundreds) words.push('l\u1ebb');
+                    words.push(digits[units]);
+                }
+
+                return words.join(' ');
+            }
+
+            function amountInVietnameseWords(amount) {
+                let remaining = Math.max(0, Math.round(Number(amount) || 0));
+                if (remaining === 0) return 'Kh\u00f4ng \u0111\u1ed3ng';
+
+                const units = ['', 'ngh\u00ecn', 'tri\u1ec7u', 't\u1ef7', 'ngh\u00ecn t\u1ef7'];
+                const groups = [];
+                while (remaining > 0) {
+                    groups.push(remaining % 1000);
+                    remaining = Math.floor(remaining / 1000);
+                }
+
+                const highestGroup = groups.length - 1;
+                const words = [];
+                for (let index = highestGroup; index >= 0; index--) {
+                    const group = groups[index];
+                    if (!group) continue;
+                    words.push(spellThreeDigits(group, index < highestGroup && group < 100));
+                    if (units[index]) words.push(units[index]);
+                }
+
+                return `${words.join(' ')} \u0111\u1ed3ng`;
+            }
 
             function notify(message, error = false) {
                 const toast = $('#pos-message').text(message).toggleClass('toast-error', error).addClass('toast-visible');
@@ -168,15 +229,51 @@
                 }
 
                 lines.forEach(line => {
+                    const detailId = readValue(line, 'maChiTiet', 'MaChiTiet');
                     const name = readValue(line, 'tenMonAn', 'TenMonAn');
                     const qty = readValue(line, 'soLuong', 'SoLuong');
                     const price = Number(readValue(line, 'donGia', 'DonGia') || 0);
                     const note = readValue(line, 'ghiChuMon', 'GhiChuMon');
+                    const kitchenProgress = String(readValue(line, 'tienDoBep', 'TienDoBep') || 'CHO_NAU').toUpperCase();
+                    const canModify = kitchenProgress === 'CHO_NAU';
+                    const kitchenLabels = {
+                        CHO_NAU: 'Ch\u1edd b\u1ebfp',
+                        DANG_NAU: '\u0110ang ch\u1ebf bi\u1ebfn',
+                        DA_XONG: '\u0110\u00e3 ch\u1ebf bi\u1ebfn'
+                    };
                     const row = $('<article class="order-line">')
                         .append($('<div class="order-line-main">')
                             .append($('<strong>').text(`${qty} x ${name}`))
                             .append($('<span>').text(formatMoney(price * qty))));
+                    row.append($('<span class="order-line-kitchen-status badge">')
+                        .addClass(canModify ? 'text-bg-secondary' : kitchenProgress === 'DA_XONG' ? 'text-bg-success' : 'text-bg-warning')
+                        .text(kitchenLabels[kitchenProgress] || kitchenLabels.CHO_NAU));
                     if (note) row.append($('<em class="order-line-note">').text(note));
+                    row.append($('<div class="order-line-actions">')
+                        .append($('<button type="button" class="btn btn-sm btn-outline-primary">')
+                            .attr('data-edit-detail', detailId)
+                            .prop('disabled', !canModify)
+                            .text('S\u1eeda'))
+                        .append($('<button type="button" class="btn btn-sm btn-outline-danger">')
+                            .attr('data-delete-detail', detailId)
+                            .attr('aria-label', 'X\u00f3a m\u00f3n')
+                            .prop('disabled', !canModify)
+                            .text('\u{1F5D1} X\u00f3a')));
+
+                    if (canModify && Number(editingDetailId) === Number(detailId)) {
+                        const editor = $('<div class="order-line-editor mt-2">');
+                        const quantityControls = $('<div class="input-group input-group-sm mb-2">')
+                            .append($('<button type="button" class="btn btn-outline-secondary" data-quantity-step="-1">').text('\u2212'))
+                            .append($('<input type="number" min="1" step="1" class="form-control text-center edit-order-quantity">').val(qty))
+                            .append($('<button type="button" class="btn btn-outline-secondary" data-quantity-step="1">').text('+'));
+                        editor.append(quantityControls)
+                            .append($('<textarea class="form-control form-control-sm mb-2 edit-order-note" maxlength="200" rows="2">').val(note || ''))
+                            .append($('<button type="button" class="btn btn-sm btn-success me-2">')
+                                .attr('data-save-detail', detailId)
+                                .text('L\u01b0u'))
+                            .append($('<button type="button" class="btn btn-sm btn-secondary" data-cancel-edit>').text('H\u1ee7y'));
+                        row.append(editor);
+                    }
                     container.append(row);
                 });
             }
@@ -330,22 +427,21 @@
             }
 
             function buildVietQr() {
-                if (!qrConfig.bankId || !qrConfig.accountNumber) {
-                    $('#vietqr-box').prop('hidden', true);
-                    $('#payment-hint').text('Vui lòng cấu hình VietQr:BankId và VietQr:AccountNumber trong appsettings.json để tạo mã thanh toán.');
-                    return;
-                }
-                const order = orderId();
-                const params = new URLSearchParams({
-                    amount: String(Math.round(payable())),
-                    addInfo: `USHI ORDER ${order}`,
-                    accountName: qrConfig.accountName
-                });
-                const imageUrl = `https://img.vietqr.io/image/${encodeURIComponent(qrConfig.bankId)}-${encodeURIComponent(qrConfig.accountNumber)}-compact2.png?${params}`;
-                $('#vietqr-image').attr('src', imageUrl);
-                $('#vietqr-caption').text(`Đơn hàng #${order} - ${formatMoney(payable())}`);
-                $('#vietqr-box').prop('hidden', false);
-                $('#payment-hint').text('Quét mã QR, sau đó xác nhận thanh toán đã nhận.');
+                const table = tables.find(item => Number(readValue(item, 'maBan', 'MaBan')) === selectedTableId());
+                const tableName = table ? readValue(table, 'soHieuBan', 'SoHieuBan') : `#${selectedTableId()}`;
+                const total = Math.round(payable());
+                const qrText = `Ushi Mania | B\u00e0n ${tableName} | Thanh to\u00e1n sau VAT 8%: ${total} VND`;
+
+                $('#vietqr-image').attr('src', `/api/restaurant/qr?text=${encodeURIComponent(qrText)}`);
+                $('#vietqr-table-label').text(`Ushi Mania \u00b7 B\u00e0n ${tableName} \u00b7 \u0110\u01a1n #${orderId()}`);
+                $('#vietqr-subtotal').text(formatMoney(subtotal()));
+                $('#vietqr-vat').text(formatMoney(vat()));
+                $('#vietqr-discount').text(formatMoney(discount));
+                $('#vietqr-amount-number').text(formatMoney(total));
+                $('#vietqr-amount-words').text(`B\u1eb1ng ch\u1eef: ${amountInVietnameseWords(total)}`);
+                $('#vietqr-caption').text(qrText);
+                $('#payment-hint').text('M\u00e3 QR demo \u0111\u01b0\u1ee3c t\u1ea1o n\u1ed9i b\u1ed9, kh\u00f4ng c\u1ea7n Internet.');
+                paymentQrModal.show();
             }
 
             function showPayment() {
@@ -358,19 +454,21 @@
                 $('#back-to-menu').prop('hidden', false);
                 paymentMethod = null;
                 $('.payment-method').removeClass('active');
-                $('#vietqr-box').prop('hidden', true);
+                paymentQrModal.hide();
                 $('#payment-hint').text('Vui lòng chọn phương thức thanh toán.');
             }
 
-            function confirmPayment() {
+            function confirmPayment(fromQrModal = false) {
                 if (!orderId() || !paymentMethod) {
                     notify('Vui lòng chọn đơn hàng và phương thức thanh toán.', true);
                     return;
                 }
-                if (paymentMethod === 'VIETQR' && (!qrConfig.bankId || !qrConfig.accountNumber)) {
-                    notify('Chưa cấu hình thông tin ngân hàng VietQR.', true);
+                if (paymentMethod === 'VIETQR' && !fromQrModal) {
+                    paymentQrModal.show();
                     return;
                 }
+
+                $('#confirm-selection, #confirm-vietqr-payment').prop('disabled', true);
                 $.ajax({
                     url: '/api/restaurant/payments',
                     method: 'POST',
@@ -388,11 +486,13 @@
                     }
                     currentOrder = null;
                     discount = 0;
+                    paymentQrModal.hide();
                     $('#payment-panel').prop('hidden', true);
                     $('#category-grid, #menu-grid').prop('hidden', false);
                     notify('Thanh toán thành công.');
                     loadTables();
-                }).fail(xhr => notify(xhr.responseJSON?.message || 'Thanh toán thất bại.', true));
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'Thanh toán thất bại.', true))
+                    .always(() => $('#confirm-selection, #confirm-vietqr-payment').prop('disabled', false));
             }
 
             function showReceipt() {
@@ -417,8 +517,82 @@
                 currentOrder = null;
                 discount = 0;
                 selectedItem = null;
+                editingDetailId = null;
                 $('#dish-note').val('');
                 refreshOrder();
+            });
+
+            $('#order-lines').on('click', '[data-edit-detail]', function () {
+                editingDetailId = Number($(this).attr('data-edit-detail'));
+                renderLines();
+            });
+
+            $('#order-lines').on('click', '[data-cancel-edit]', function () {
+                editingDetailId = null;
+                renderLines();
+            });
+
+            $('#order-lines').on('click', '[data-quantity-step]', function () {
+                const editor = $(this).closest('.order-line-editor');
+                const input = editor.find('.edit-order-quantity');
+                const nextQuantity = Number(input.val() || 1) + Number($(this).attr('data-quantity-step'));
+                input.val(Math.max(1, nextQuantity));
+            });
+
+            $('#order-lines').on('click', '[data-save-detail]', function () {
+                const button = $(this);
+                const detailId = Number(button.attr('data-save-detail'));
+                const editor = button.closest('.order-line-editor');
+                const newQuantity = Number(editor.find('.edit-order-quantity').val());
+                const newNote = editor.find('.edit-order-note').val();
+                if (!Number.isInteger(newQuantity) || newQuantity <= 0) {
+                    notify('S\u1ed1 l\u01b0\u1ee3ng ph\u1ea3i l\u00e0 s\u1ed1 nguy\u00ean d\u01b0\u01a1ng.', true);
+                    return;
+                }
+
+                button.prop('disabled', true);
+                $.ajax({
+                    url: '/api/restaurant/order/chi-tiet',
+                    method: 'PUT',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maChiTiet: detailId, soLuongMoi: newQuantity, ghiChuMoi: newNote })
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'C\u1eadp nh\u1eadt m\u00f3n th\u1ea5t b\u1ea1i.', true);
+                        return;
+                    }
+
+                    editingDetailId = null;
+                    notify(response.message || 'C\u1eadp nh\u1eadt m\u00f3n th\u00e0nh c\u00f4ng.');
+                    loadTables();
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'C\u1eadp nh\u1eadt m\u00f3n th\u1ea5t b\u1ea1i.', true))
+                    .always(() => button.prop('disabled', false));
+            });
+
+            $('#order-lines').on('click', '[data-delete-detail]', function () {
+                const button = $(this);
+                const detailId = Number(button.attr('data-delete-detail'));
+                if (!window.confirm('B\u1ea1n c\u00f3 ch\u1eafc mu\u1ed1n x\u00f3a m\u00f3n n\u00e0y kh\u00f4ng?')) {
+                    return;
+                }
+
+                button.prop('disabled', true);
+                $.ajax({
+                    url: `/api/restaurant/order/chi-tiet/${detailId}`,
+                    method: 'DELETE',
+                    dataType: 'json'
+                }).done(response => {
+                    if (!response?.success) {
+                        notify(response?.message || 'X\u00f3a m\u00f3n th\u1ea5t b\u1ea1i.', true);
+                        return;
+                    }
+
+                    editingDetailId = null;
+                    notify(response.message || 'X\u00f3a m\u00f3n th\u00e0nh c\u00f4ng.');
+                    loadTables();
+                }).fail(xhr => notify(xhr.responseJSON?.message || 'X\u00f3a m\u00f3n th\u1ea5t b\u1ea1i.', true))
+                    .always(() => button.prop('disabled', false));
             });
 
             $('.order-numpad').on('click', 'button', function () {
@@ -488,10 +662,11 @@
                 $(this).addClass('active');
                 if (paymentMethod === 'VIETQR') buildVietQr();
                 else {
-                    $('#vietqr-box').prop('hidden', true);
+                    paymentQrModal.hide();
                     $('#payment-hint').text('Nhấn dấu tích xanh để xác nhận thanh toán.');
                 }
             });
+            $('#confirm-vietqr-payment').on('click', () => confirmPayment(true));
             $('[data-close-overlay]').on('click', () => $('#receipt-overlay').prop('hidden', true));
             $('#receipt-overlay').on('click', event => {
                 if (event.target === event.currentTarget) $('#receipt-overlay').prop('hidden', true);

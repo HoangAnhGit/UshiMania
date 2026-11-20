@@ -59,6 +59,36 @@ public sealed class OrderBLL
         return orderDAL.AddItem(orderId, menuItemId, quantity, note);
     }
 
+    public bool CapNhatChiTietOrder(int detailId, int quantity, string? note)
+    {
+        if (detailId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(detailId), "Order detail ID must be positive.");
+        }
+
+        if (quantity <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be positive.");
+        }
+
+        if (note?.Length > 200)
+        {
+            throw new ArgumentException("Dish note cannot exceed 200 characters.", nameof(note));
+        }
+
+        return orderDAL.CapNhatChiTietOrder(detailId, quantity, note);
+    }
+
+    public bool XoaChiTietOrder(int detailId)
+    {
+        if (detailId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(detailId), "Order detail ID must be positive.");
+        }
+
+        return orderDAL.XoaChiTietOrder(detailId);
+    }
+
     public int? AddGuestOrder(int tableId, IReadOnlyList<GuestOrderItemRequest>? items)
     {
         if (tableId <= 0)
