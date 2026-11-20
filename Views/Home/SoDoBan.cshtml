@@ -1,5 +1,15 @@
+@using System.Net
+@using System.Net.Sockets
 @{
     ViewData["Title"] = "Sơ đồ bàn";
+    string lanIp = "192.168.0.101";
+    try
+    {
+        var entry = Dns.GetHostEntry(Dns.GetHostName());
+        var ip = entry.AddressList.FirstOrDefault(a => a.AddressFamily == AddressFamily.InterNetwork && !IPAddress.IsLoopback(a) && !a.ToString().StartsWith("169.254"));
+        if (ip != null) lanIp = ip.ToString();
+    }
+    catch { }
 }
 
 <div class="table-map-page">
@@ -74,7 +84,19 @@
         <h2 id="qr-title">M&#227; QR g&#7885;i m&#243;n</h2>
         <p id="qr-table-name" class="qr-table-name"></p>
         <img id="table-qr-image" class="table-qr-image" alt="QR order link" />
-        <a id="guest-order-preview" class="qr-preview-link" target="_blank" rel="noopener">M&#7903; th&#7917; giao di&#7879;n kh&#225;ch</a>
+
+        <div style="margin: 12px 0 8px 0; font-size: 12px; text-align: left; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid #dee2e6;">
+            <label for="qr-server-host" style="font-weight: 600; color: #495057; display: block; margin-bottom: 4px;">
+                IP máy tính (để điện thoại chung Wi-Fi quét):
+            </label>
+            <div style="display: flex; gap: 6px;">
+                <input type="text" id="qr-server-host" class="form-control form-control-sm" value="@lanIp:5139" placeholder="vd: 192.168.0.101:5139" />
+                <button type="button" id="btn-refresh-qr-ip" class="btn btn-sm btn-primary" style="white-space: nowrap;">Cập nhật</button>
+            </div>
+            <div id="qr-current-url" style="color: #0d6efd; word-break: break-all; margin-top: 6px; font-size: 11.5px; font-weight: 500;"></div>
+        </div>
+
+        <a id="guest-order-preview" class="qr-preview-link" target="_blank" rel="noopener">M&#7903; th&#7917; giao di&#7879;n kh&#225;ch tr&#234;n m&#225;y t&#237;nh</a>
     </section>
 </div>
 
@@ -205,18 +227,41 @@
                 }
             });
 
+            let currentQrTableId = null;
+
+            function updateQrModal() {
+                if (!currentQrTableId) return;
+                const selectedTable = tables.find(table => Number(tableId(table)) === currentQrTableId);
+                let host = $('#qr-server-host').val() ? $('#qr-server-host').val().trim() : '@lanIp:5139';
+                if (!host) host = '@lanIp:5139';
+
+                let baseUrl = host.startsWith('http://') || host.startsWith('https://')
+                    ? host
+                    : `http://${host}`;
+
+                const fullUrl = `${baseUrl.replace(/\/$/, '')}/Home/GuestOrder?maBan=${currentQrTableId}`;
+
+                $('#qr-table-name').text(`Bàn ${tableNumber(selectedTable)}`);
+                $('#qr-current-url').text(fullUrl);
+                $('#guest-order-preview').attr('href', fullUrl);
+                $('#table-qr-image').attr('src', `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(fullUrl)}`);
+                $('#table-qr-modal').prop('hidden', false);
+            }
+
             $('#table-grid').on('click', '.table-qr-button', function (event) {
                 event.preventDefault();
                 event.stopPropagation();
                 const card = $(this).closest('.table-card');
-                const id = Number(card.attr('data-table-id'));
-                const selectedTable = tables.find(table => Number(tableId(table)) === id);
-                const guestUrl = new URL('/Home/GuestOrder', window.location.origin);
-                guestUrl.searchParams.set('maBan', id);
-                $('#qr-table-name').text(`Bàn ${tableNumber(selectedTable)}`);
-                $('#guest-order-preview').attr('href', guestUrl.href);
-                $('#table-qr-image').attr('src', `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(guestUrl.href)}`);
-                $('#table-qr-modal').prop('hidden', false);
+                currentQrTableId = Number(card.attr('data-table-id'));
+                updateQrModal();
+            });
+
+            $('#btn-refresh-qr-ip').on('click', updateQrModal);
+            $('#qr-server-host').on('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    updateQrModal();
+                }
             });
 
             $('#close-qr-modal').on('click', () => $('#table-qr-modal').prop('hidden', true));
