@@ -1,4 +1,5 @@
 using System.Data;
+using System.Data;
 using Microsoft.Data.SqlClient;
 
 namespace UshiMania.DAL;
@@ -25,6 +26,13 @@ public sealed class HoaDonKhoDAL
     {
         using var connection = dbHelper.CreateConnection();
         connection.Open();
+
+        var unfinishedCount = CountUnfinishedKitchenItems(connection, null, orderId);
+        if (unfinishedCount > 0)
+        {
+            throw new UnfinishedKitchenItemsException(unfinishedCount);
+        }
+
         using var transaction = connection.BeginTransaction(IsolationLevel.Serializable);
 
         try
@@ -51,6 +59,12 @@ public sealed class HoaDonKhoDAL
             }
 
             var tableId = Convert.ToInt32(tableIdValue);
+
+            unfinishedCount = CountUnfinishedKitchenItems(connection, transaction, orderId);
+            if (unfinishedCount > 0)
+            {
+                throw new UnfinishedKitchenItemsException(unfinishedCount);
+            }
 
             const string subtotalSql = """
                 SELECT SUM(CAST(so_luong AS DECIMAL(18, 2)) * don_gia_luc_goi)
@@ -161,6 +175,24 @@ public sealed class HoaDonKhoDAL
         }
     }
 
+    private int CountUnfinishedKitchenItems(SqlConnection connection, SqlTransaction? transaction, int orderId)
+    {
+        const string sql = """
+            SELECT COUNT(1)
+            FROM chi_tiet_don_hang AS ct WITH (UPDLOCK, HOLDLOCK)
+            INNER JOIN don_hang AS d WITH (UPDLOCK, HOLDLOCK)
+                ON d.ma_don_hang = ct.ma_don_hang
+            WHERE ct.ma_don_hang = @ma_don_hang
+              AND d.trang_thai_don = @trang_thai_don
+              AND ISNULL(ct.tien_do_bep, 'CHO_NAU') <> 'DA_XONG';
+            """;
+
+        using var command = dbHelper.CreateCommand(connection, sql, transaction);
+        command.Parameters.AddWithValue("@ma_don_hang", orderId);
+        command.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+        return Convert.ToInt32(command.ExecuteScalar());
+    }
+
     private List<IngredientRequirement> GetIngredientRequirements(
         SqlConnection connection,
         SqlTransaction transaction,
@@ -229,3 +261,6 @@ public sealed class HoaDonKhoDAL
 
     private sealed record IngredientRequirement(int IngredientId, decimal Quantity);
 }
+
+public sealed class UnfinishedKitchenItemsException(int unfinishedCount)
+    : InvalidOperationException($"Kh\u00f4ng th\u1ec3 thanh to\u00e1n! V\u1eabn c\u00f2n {unfinishedCount} m\u00f3n ch\u01b0a ch\u1ebf bi\u1ebfn xong t\u1ea1i b\u1ebfp.");

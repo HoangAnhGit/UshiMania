@@ -382,7 +382,8 @@ public sealed class OrderDAL
 
         const string detailsSql = """
             SELECT ct.ma_chi_tiet, ct.ma_mon_an, m.ten_mon_an,
-                   ct.so_luong, ct.don_gia_luc_goi, ct.ghi_chu_mon
+                   ct.so_luong, ct.don_gia_luc_goi, ct.ghi_chu_mon,
+                   COALESCE(ct.tien_do_bep, 'CHO_NAU')
             FROM chi_tiet_don_hang AS ct
             INNER JOIN mon_an AS m ON m.ma_mon_an = ct.ma_mon_an
             WHERE ct.ma_don_hang = @ma_don_hang
@@ -401,7 +402,8 @@ public sealed class OrderDAL
                 TenMonAn = detailsReader.GetString(2),
                 SoLuong = detailsReader.GetInt32(3),
                 DonGia = detailsReader.GetDecimal(4),
-                GhiChuMon = detailsReader.IsDBNull(5) ? null : detailsReader.GetString(5)
+                GhiChuMon = detailsReader.IsDBNull(5) ? null : detailsReader.GetString(5),
+                TienDoBep = detailsReader.GetString(6)
             });
         }
 

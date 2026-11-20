@@ -33,4 +33,5 @@ public sealed class OrderPOSLine
     public int SoLuong { get; set; }
     public decimal DonGia { get; set; }
     public string? GhiChuMon { get; set; }
+    public string TienDoBep { get; set; } = "CHO_NAU";
 }

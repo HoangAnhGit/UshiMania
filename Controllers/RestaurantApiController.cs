@@ -79,6 +79,78 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
+    [HttpPut("tables/transfer")]
+    public async Task<IActionResult> ChuyenBan([FromBody] ChuyenGopBanRequest? request)
+    {
+        try
+        {
+            if (request is null)
+            {
+                return Json(new { success = false, message = "Thiếu dữ liệu chuyển bàn.", data = (object?)null });
+            }
+
+            var transferred = banAnBLL.ChuyenBan(request.MaBanNguon, request.MaBanDich);
+            if (transferred)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "table-transferred",
+                    sourceTableId = request.MaBanNguon,
+                    targetTableId = request.MaBanDich
+                });
+            }
+
+            return Json(new
+            {
+                success = transferred,
+                message = transferred
+                    ? "Chuyển bàn thành công."
+                    : "Không thể chuyển bàn: bàn nguồn chưa có đơn mở hoặc bàn đích không trống.",
+                data = transferred
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(ChuyenBan));
+        }
+    }
+
+    [HttpPut("tables/merge")]
+    public async Task<IActionResult> GopBan([FromBody] ChuyenGopBanRequest? request)
+    {
+        try
+        {
+            if (request is null)
+            {
+                return Json(new { success = false, message = "Thiếu dữ liệu gộp bàn.", data = (object?)null });
+            }
+
+            var merged = banAnBLL.GopBan(request.MaBanNguon, request.MaBanDich);
+            if (merged)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "tables-merged",
+                    sourceTableId = request.MaBanNguon,
+                    targetTableId = request.MaBanDich
+                });
+            }
+
+            return Json(new
+            {
+                success = merged,
+                message = merged
+                    ? "Gộp bàn thành công."
+                    : "Không thể gộp bàn: cả hai bàn phải có đơn đang mở.",
+                data = merged
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(GopBan));
+        }
+    }
+
     [HttpPost("orders")]
     public async Task<IActionResult> TaoHoacCapNhatOrder([FromBody] TaoHoacCapNhatOrderRequest? request)
     {
@@ -314,6 +386,10 @@ public sealed class RestaurantApiController : Controller
                 message = paid ? "Thanh toán và trừ kho thành công." : "Không thể thanh toán: đơn không hợp lệ, chưa có món hoặc tồn kho không đủ.",
                 data = paid
             });
+        }
+        catch (UnfinishedKitchenItemsException exception)
+        {
+            return Json(new { success = false, message = exception.Message, data = (object?)null });
         }
         catch (Exception exception)
         {

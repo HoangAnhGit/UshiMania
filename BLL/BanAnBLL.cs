@@ -40,7 +40,7 @@ public sealed class BanAnBLL
         return banAnDAL.ChangeStatus(tableId, status);
     }
 
-    public bool MergeOrTransferTables(int sourceTableId, int targetTableId)
+    public bool ChuyenBan(int sourceTableId, int targetTableId)
     {
         if (sourceTableId <= 0)
         {
@@ -57,6 +57,26 @@ public sealed class BanAnBLL
             throw new ArgumentException("Source and target tables must be different.");
         }
 
-        return banAnDAL.MergeOrTransfer(sourceTableId, targetTableId);
+        return banAnDAL.ChuyenBan(sourceTableId, targetTableId);
+    }
+
+    public bool GopBan(int sourceTableId, int targetTableId)
+    {
+        if (sourceTableId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(sourceTableId), "Table ID must be positive.");
+        }
+
+        if (targetTableId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(targetTableId), "Table ID must be positive.");
+        }
+
+        if (sourceTableId == targetTableId)
+        {
+            throw new ArgumentException("Source and target tables must be different.");
+        }
+
+        return banAnDAL.GopBan(sourceTableId, targetTableId);
     }
 }

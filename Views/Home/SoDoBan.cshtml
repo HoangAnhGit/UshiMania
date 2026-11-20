@@ -78,6 +78,27 @@
     </section>
 </div>
 
+<div class="modal fade" id="table-operation-modal" tabindex="-1" aria-labelledby="table-operation-title" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title fs-5" id="table-operation-title"></h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Đóng"></button>
+            </div>
+            <div class="modal-body">
+                <p id="table-operation-description" class="mb-3"></p>
+                <label for="table-operation-target" class="form-label">Bàn đích</label>
+                <select id="table-operation-target" class="form-select"></select>
+                <div id="table-operation-error" class="alert alert-danger mt-3 mb-0" role="alert" hidden></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-primary" id="confirm-table-operation"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         $(function () {
@@ -175,6 +196,10 @@
                     }
 
                     tables = response.data || [];
+                    const requestedTableId = Number(new URLSearchParams(window.location.search).get('maBan') || 0);
+                    if (!selectedTableId && requestedTableId && tables.some(table => Number(tableId(table)) === requestedTableId)) {
+                        selectedTableId = requestedTableId;
+                    }
                     fillAreas();
                     renderTables();
                 }).fail(() => {
@@ -268,8 +293,74 @@
                 });
             });
 
-            $('#transfer-table, #merge-table').on('click', function () {
-                showMessage('Chức năng này cần action chuyển/gộp bàn trên API.', true);
+            let tableOperation = null;
+            const tableOperationModal = bootstrap.Modal.getOrCreateInstance(document.getElementById('table-operation-modal'));
+
+            function openTableOperation(operation) {
+                if (!selectedTableId) {
+                    showMessage('Vui lòng chọn bàn nguồn trước.', true);
+                    return;
+                }
+
+                const sourceTable = tables.find(table => Number(tableId(table)) === selectedTableId);
+                if (!sourceTable) {
+                    showMessage('Không tìm thấy bàn nguồn. Vui lòng tải lại sơ đồ bàn.', true);
+                    return;
+                }
+
+                tableOperation = operation;
+                const requiredStatus = operation === 'transfer' ? 'TRONG' : 'DANG_PHUC_VU';
+                const targets = tables.filter(table =>
+                    Number(tableId(table)) !== selectedTableId &&
+                    normalizeStatus(readValue(table, 'trangThai', 'TrangThai')) === requiredStatus);
+                const targetSelect = $('#table-operation-target').empty();
+                targets.forEach(table => {
+                    targetSelect.append($('<option>').val(tableId(table)).text(`${tableNumber(table)} - ${tableArea(table)}`));
+                });
+
+                const isTransfer = operation === 'transfer';
+                $('#table-operation-title').text(isTransfer ? 'Chuyển bàn' : 'Gộp bàn');
+                $('#table-operation-description').text(isTransfer
+                    ? `Chuyển đơn đang mở từ ${tableNumber(sourceTable)} sang một bàn đang trống.`
+                    : `Chuyển toàn bộ món từ ${tableNumber(sourceTable)} vào đơn của bàn đích đang phục vụ.`);
+                $('#confirm-table-operation').text(isTransfer ? 'Xác nhận chuyển bàn' : 'Xác nhận gộp bàn');
+                $('#table-operation-error').prop('hidden', targets.length > 0).text(
+                    targets.length > 0 ? '' : (isTransfer ? 'Không có bàn trống để nhận đơn.' : 'Không có bàn đang phục vụ để gộp vào.'));
+                $('#confirm-table-operation').prop('disabled', targets.length === 0);
+                tableOperationModal.show();
+            }
+
+            $('#transfer-table').on('click', () => openTableOperation('transfer'));
+            $('#merge-table').on('click', () => openTableOperation('merge'));
+
+            $('#confirm-table-operation').on('click', function () {
+                const sourceTableId = selectedTableId;
+                const targetTableId = Number($('#table-operation-target').val() || 0);
+                if (!sourceTableId || !targetTableId || !tableOperation) {
+                    $('#table-operation-error').text('Vui lòng chọn bàn đích hợp lệ.').prop('hidden', false);
+                    return;
+                }
+
+                const isTransfer = tableOperation === 'transfer';
+                const button = $(this).prop('disabled', true);
+                $.ajax({
+                    url: isTransfer ? '/api/restaurant/tables/transfer' : '/api/restaurant/tables/merge',
+                    method: 'PUT',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({ maBanNguon: sourceTableId, maBanDich: targetTableId })
+                }).done(response => {
+                    if (!response?.success) {
+                        $('#table-operation-error').text(response?.message || 'Thao tác bàn thất bại.').prop('hidden', false);
+                        return;
+                    }
+
+                    tableOperationModal.hide();
+                    showMessage(response.message || (isTransfer ? 'Chuyển bàn thành công.' : 'Gộp bàn thành công.'));
+                    loadTables();
+                }).fail(xhr => {
+                    $('#table-operation-error').text(xhr.responseJSON?.message || 'Không thể thực hiện thao tác bàn.').prop('hidden', false);
+                }).always(() => button.prop('disabled', !$('#table-operation-target option').length));
             });
 
             loadTables();

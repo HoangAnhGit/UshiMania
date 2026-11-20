@@ -33,6 +33,7 @@
         <div id="order-lines" class="order-lines">
             <div class="order-empty">Ch&#7885;n b&#224;n &#273;&#7875; xem order.</div>
         </div>
+        <div id="kitchen-payment-warning" class="alert alert-danger py-2 mt-2 mb-0" role="alert" hidden></div>
         <div class="order-note-box">
             <label for="dish-note">Ghi ch&#250; m&#243;n &#273;ang ch&#7885;n</label>
             <textarea id="dish-note" maxlength="200" placeholder="V&#237; d&#7909;: kh&#244;ng h&#224;nh..."></textarea>
@@ -94,7 +95,7 @@
         <div class="order-main-actions">
             <button type="button" class="order-main-button action-blue" id="send-order">Order<br /><small>G&#7917;i b&#7871;p</small></button>
             <button type="button" class="order-main-button action-orange" id="subtotal-preview">T&#7841;m t&#237;nh<br /><small>In bill</small></button>
-            <button type="button" class="order-main-button action-red" id="open-payment">Thanh to&#225;n</button>
+            <button type="button" class="order-main-button action-red" id="open-payment" disabled>Thanh to&#225;n</button>
             <button type="button" class="order-main-button action-green" id="confirm-selection">&#10003;</button>
             <button type="button" class="order-main-button action-red" id="cancel-action">&times;</button>
         </div>
@@ -139,6 +140,9 @@
             const payable = () => Math.max(0, subtotal() + vat() - discount);
             const orderId = () => readValue(currentOrder, 'maDonHang', 'MaDonHang');
             const selectedTableId = () => Number($('#order-table-select').val() || 0);
+            const orderLines = () => readValue(currentOrder, 'chiTiet', 'ChiTiet') || [];
+            const kitchenProgress = line => String(readValue(line, 'tienDoBep', 'TienDoBep') || 'CHO_NAU').toUpperCase();
+            const unfinishedKitchenLines = () => orderLines().filter(line => kitchenProgress(line) !== 'DA_XONG');
 
             function notify(message, error = false) {
                 const toast = $('#pos-message').text(message).toggleClass('toast-error', error).addClass('toast-visible');
@@ -159,11 +163,21 @@
                 $('#grand-total').text(formatMoney(payable()));
             }
 
+            function updateKitchenPaymentState() {
+                const unfinishedCount = unfinishedKitchenLines().length;
+                const cannotPay = unfinishedCount > 0;
+                $('#open-payment').prop('disabled', !orderId() || !orderLines().length || cannotPay);
+                $('#kitchen-payment-warning')
+                    .text(cannotPay ? `Kh\u00f4ng th\u1ec3 thanh to\u00e1n! V\u1eabn c\u00f2n ${unfinishedCount} m\u00f3n ch\u01b0a ch\u1ebf bi\u1ebfn xong t\u1ea1i b\u1ebfp.` : '')
+                    .prop('hidden', !cannotPay);
+            }
+
             function renderLines() {
-                const lines = readValue(currentOrder, 'chiTiet', 'ChiTiet') || [];
+                const lines = orderLines();
                 const container = $('#order-lines').empty();
                 if (!lines.length) {
                     container.append($('<div class="order-empty">').text('No items in this order yet.'));
+                    updateKitchenPaymentState();
                     return;
                 }
 
@@ -172,13 +186,20 @@
                     const qty = readValue(line, 'soLuong', 'SoLuong');
                     const price = Number(readValue(line, 'donGia', 'DonGia') || 0);
                     const note = readValue(line, 'ghiChuMon', 'GhiChuMon');
+                    const progress = kitchenProgress(line);
+                    const progressLabels = { CHO_NAU: 'Ch\u1edd n\u1ea5u', DANG_NAU: '\u0110ang n\u1ea5u', DA_XONG: '\u0110\u00e3 xong' };
+                    const progressClass = progress === 'DA_XONG' ? 'text-bg-success' : progress === 'DANG_NAU' ? 'text-bg-warning' : 'text-bg-secondary';
                     const row = $('<article class="order-line">')
                         .append($('<div class="order-line-main">')
                             .append($('<strong>').text(`${qty} x ${name}`))
                             .append($('<span>').text(formatMoney(price * qty))));
+                    row.append($('<span class="badge order-line-kitchen-status">')
+                        .addClass(progressClass)
+                        .text(progressLabels[progress] || progressLabels.CHO_NAU));
                     if (note) row.append($('<em class="order-line-note">').text(note));
                     container.append(row);
                 });
+                updateKitchenPaymentState();
             }
 
             function refreshOrder() {
@@ -353,6 +374,12 @@
                     notify('Add at least one dish before payment.', true);
                     return;
                 }
+                const unfinishedCount = unfinishedKitchenLines().length;
+                if (unfinishedCount > 0) {
+                    notify(`Kh\u00f4ng th\u1ec3 thanh to\u00e1n! V\u1eabn c\u00f2n ${unfinishedCount} m\u00f3n ch\u01b0a ch\u1ebf bi\u1ebfn xong t\u1ea1i b\u1ebfp.`, true);
+                    updateKitchenPaymentState();
+                    return;
+                }
                 $('#category-grid, #menu-grid').prop('hidden', true);
                 $('#payment-panel').prop('hidden', false);
                 $('#back-to-menu').prop('hidden', false);
@@ -384,6 +411,7 @@
                 }).done(response => {
                     if (!response?.success) {
                         notify(response?.message || 'Payment failed.', true);
+                        refreshOrder();
                         return;
                     }
                     currentOrder = null;
@@ -392,7 +420,10 @@
                     $('#category-grid, #menu-grid').prop('hidden', false);
                     notify('Payment completed.');
                     loadTables();
-                }).fail(xhr => notify(xhr.responseJSON?.message || 'Payment failed.', true));
+                }).fail(xhr => {
+                    notify(xhr.responseJSON?.message || 'Payment failed.', true);
+                    refreshOrder();
+                });
             }
 
             function showReceipt() {
@@ -497,7 +528,15 @@
                 if (event.target === event.currentTarget) $('#receipt-overlay').prop('hidden', true);
             });
             $('#print-receipt').on('click', () => window.print());
-            $('#transfer-table, #merge-table').on('click', () => notify('Table transfer/merge requires a dedicated API action.', true));
+            $('#transfer-table, #merge-table').on('click', function () {
+                const tableId = selectedTableId();
+                if (!tableId) {
+                    notify('Ch\u1ecdn b\u00e0n ngu\u1ed3n tr\u01b0\u1edbc khi chuy\u1ec3n ho\u1eb7c g\u1ed9p b\u00e0n.', true);
+                    return;
+                }
+
+                window.location.href = `/Home/SoDoBan?maBan=${encodeURIComponent(tableId)}`;
+            });
 
             if (typeof signalR !== 'undefined') {
                 const hubConnection = new signalR.HubConnectionBuilder()
