@@ -28,8 +28,8 @@
             color: #212529;
         }
 
-        /* Màn hình tổng thể kiểu POS Kiosk */
-        .pos-container {
+        /* 1. KHUNG TỔNG THỂ MÀN HÌNH POS */
+        .khung-tong-the {
             display: flex;
             width: 100vw;
             height: 100vh;
@@ -37,8 +37,8 @@
             position: relative;
         }
 
-        /* Khu vực chính bên trái */
-        .pos-main {
+        /* 2. KHU VỰC CHÍNH BÊN TRÁI */
+        .khu-vuc-chinh {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -48,7 +48,7 @@
         }
 
         /* Thanh trạng thái phía trên */
-        .pos-top-bar {
+        .thanh-trang-thai-tren {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -57,22 +57,22 @@
             font-weight: 500;
         }
 
-        .status-badge {
+        .huy-hieu-trang-thai {
             color: #28a745;
             font-weight: bold;
             font-size: 14px;
             letter-spacing: 0.5px;
         }
 
-        .pos-clock {
+        .dong-ho-thoi-gian {
             color: #2c3036;
             font-size: 16px;
             font-weight: 600;
             letter-spacing: 0.5px;
         }
 
-        /* Khu vực trung tâm đăng nhập */
-        .pos-center-stage {
+        /* 3. KHU VỰC ĐĂNG NHẬP TRUNG TÂM */
+        .khu-vuc-dang-nhap-trung-tam {
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -81,7 +81,7 @@
             padding: 10px 20px;
         }
 
-        .login-card-wrapper {
+        .khung-the-dang-nhap {
             display: flex;
             align-items: flex-start;
             gap: 28px;
@@ -89,16 +89,15 @@
             width: 100%;
         }
 
-        /* Cột bên trái: Logo + Form input */
-        .login-left-col {
+        /* 4. CỘT BÊN TRÁI: LOGO + CÁC Ô NHẬP LIỆU */
+        .cot-trai-bieu-mau {
             flex: 1;
             display: flex;
             flex-direction: column;
             padding-top: 5px;
         }
 
-        /* Khung hiển thị logo Ushi Mania: Thiết kế dài ra vừa vặn theo chiều ngang các ô nhập */
-        .logo-box {
+        .khung-chua-logo {
             margin-bottom: 22px;
             display: flex;
             flex-direction: column;
@@ -106,7 +105,7 @@
             width: 100%;
         }
 
-        .logo-badge {
+        .the-logo-nha-hang {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -116,11 +115,11 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
             border: 1px solid #333333;
             width: 100%;
-            max-width: 360px; /* Logo dài ra vừa vặn cân đối với form bên dưới */
+            max-width: 360px;
             height: 86px;
         }
 
-        .logo-badge img {
+        .the-logo-nha-hang img {
             width: 100%;
             max-width: 310px;
             height: 100%;
@@ -129,7 +128,7 @@
             image-rendering: -webkit-optimize-contrast;
         }
 
-        .brand-instruction {
+        .dong-huong-dan-dang-nhap {
             font-size: 13.5px;
             color: #495057;
             font-weight: 500;
@@ -137,8 +136,7 @@
             line-height: 1.4;
         }
 
-        /* Nhóm ô nhập liệu */
-        .input-fields-group {
+        .nhom-o-nhap-lieu {
             display: flex;
             flex-direction: column;
             gap: 14px;
@@ -146,7 +144,7 @@
             max-width: 360px;
         }
 
-        .pos-input-row {
+        .dong-nhap-lieu {
             display: flex;
             width: 100%;
             height: 42px;
@@ -156,12 +154,12 @@
             transition: all 0.2s ease;
         }
 
-        .pos-input-row.focused {
+        .dong-nhap-lieu.dang-chon {
             border-color: #0d6efd;
             box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25), inset 0 1px 2px rgba(0,0,0,0.1);
         }
 
-        .input-label {
+        .nhan-o-nhap {
             display: flex;
             align-items: center;
             padding: 0 12px;
@@ -174,7 +172,7 @@
             user-select: none;
         }
 
-        .pos-input-row input {
+        .dong-nhap-lieu input {
             flex: 1;
             border: none;
             outline: none;
@@ -187,22 +185,21 @@
             -webkit-user-select: text;
         }
 
-        /* Cột bên phải: Numpad + Nút Đăng nhập */
-        .login-right-col {
+        /* 5. CỘT BÊN PHẢI: BÀN PHÍM SỐ + NÚT ĐĂNG NHẬP */
+        .cot-phai-ban-phim {
             display: flex;
             flex-direction: column;
             width: 230px;
         }
 
-        /* Lưới phím số Numpad */
-        .pos-numpad-grid {
+        .luoi-ban-phim-so {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 4px;
             margin-bottom: 8px;
         }
 
-        .numpad-key {
+        .phim-so {
             height: 52px;
             background: linear-gradient(180deg, #575c65 0%, #464a52 100%);
             border: 1px solid #373a40;
@@ -218,19 +215,18 @@
             justify-content: center;
         }
 
-        .numpad-key:active {
+        .phim-so:active {
             background: linear-gradient(180deg, #383b42 0%, #4a4f58 100%);
             transform: translateY(1px);
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
         }
 
-        .numpad-key.key-delete {
+        .phim-so.phim-xoa {
             font-size: 16px;
             font-weight: 600;
         }
 
-        /* Nút Đăng nhập màu đỏ */
-        .btn-pos-submit {
+        .nut-dang-nhap {
             width: 100%;
             height: 48px;
             background: linear-gradient(180deg, #cf2027 0%, #ba161c 100%);
@@ -248,23 +244,22 @@
             letter-spacing: 0.3px;
         }
 
-        .btn-pos-submit:hover {
+        .nut-dang-nhap:hover {
             background: linear-gradient(180deg, #dd252c 0%, #c4181f 100%);
         }
 
-        .btn-pos-submit:active {
+        .nut-dang-nhap:active {
             background: linear-gradient(180deg, #a81217 0%, #bd171e 100%);
             transform: translateY(1px);
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
         }
 
-        .btn-pos-submit:disabled {
+        .nut-dang-nhap:disabled {
             opacity: 0.6;
             cursor: not-allowed;
         }
 
-        /* Dòng khẩu hiệu dưới cùng của giao diện giữa */
-        .pos-bottom-slogan {
+        .dong-khau-hieu-duoi {
             margin-top: 40px;
             text-align: center;
             font-size: 12.5px;
@@ -274,8 +269,8 @@
             text-transform: uppercase;
         }
 
-        /* Thanh footer đỏ ở đáy */
-        .pos-footer-bar {
+        /* 6. THANH FOOTER ĐỎ ĐÁY MÀN HÌNH */
+        .thanh-footer-do {
             position: absolute;
             bottom: 0;
             left: 0;
@@ -291,42 +286,42 @@
             box-shadow: 0 -2px 6px rgba(0, 0, 0, 0.15);
         }
 
-        .footer-left {
+        .footer-ben-trai {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .footer-left .label-tech {
+        .nhan-ho-tro-ky-thuat {
             font-weight: 400;
             letter-spacing: 0.3px;
         }
 
-        .footer-left .hotline-num {
+        .so-hotline {
             font-weight: 700;
             font-size: 14px;
         }
 
-        .footer-right {
+        .footer-ben-phai {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .footer-right a {
+        .footer-ben-phai a {
             color: #ffffff;
             text-decoration: none;
             font-weight: 500;
         }
 
-        .footer-right svg {
+        .footer-ben-phai svg {
             width: 14px;
             height: 14px;
             fill: #ffffff;
         }
 
-        /* Thanh chức năng dọc bên phải (Vertical Sidebar) */
-        .pos-sidebar {
+        /* 7. THANH CÔNG CỤ DỌC BÊN PHẢI */
+        .thanh-cong-cu-phai {
             width: 58px;
             height: 100vh;
             background-color: #3b3f46;
@@ -339,13 +334,13 @@
             z-index: 10;
         }
 
-        .sidebar-btn-group-top, .sidebar-btn-group-bottom {
+        .nhom-nut-ben-tren, .nhom-nut-ben-duoi {
             display: flex;
             flex-direction: column;
             gap: 3px;
         }
 
-        .sidebar-btn-group-middle {
+        .nhom-o-trong-o-giua {
             display: flex;
             flex-direction: column;
             gap: 3px;
@@ -353,7 +348,7 @@
             margin: 3px 0;
         }
 
-        .sidebar-btn {
+        .nut-thanh-ben {
             width: 100%;
             height: 48px;
             border: 1px solid rgba(0, 0, 0, 0.3);
@@ -367,55 +362,55 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 2px rgba(0,0,0,0.2);
         }
 
-        .sidebar-btn:active {
+        .nut-thanh-ben:active {
             transform: translateY(1px);
             box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4);
         }
 
-        .sidebar-btn.btn-close-red {
+        .nut-thanh-ben.nut-xoa-trang-do {
             background: linear-gradient(180deg, #d32f2f 0%, #b71c1c 100%);
             border-color: #8b1116;
             color: #ffffff;
         }
 
-        .sidebar-btn.btn-swap-blue {
+        .nut-thanh-ben.nut-hoan-doi-xanh {
             background: linear-gradient(180deg, #0d6efd 0%, #0a58ca 100%);
             border-color: #084298;
             color: #ffffff;
         }
 
-        .sidebar-btn.btn-bulb-cyan {
+        .nut-thanh-ben.nut-bong-den-tro-giup {
             background: linear-gradient(180deg, #00b0ff 0%, #0091ea 100%);
             border-color: #0070b8;
             color: #ffffff;
         }
 
-        .sidebar-btn.btn-slot-gray {
+        .nut-thanh-ben.o-chuc-nang-xam {
             background: linear-gradient(180deg, #4f545d 0%, #42464e 100%);
             border-color: #34373e;
             cursor: default;
         }
 
-        .sidebar-btn.btn-refresh-gray {
+        .nut-thanh-ben.nut-tai-lai-xam {
             background: linear-gradient(180deg, #4f545d 0%, #42464e 100%);
             border-color: #34373e;
             color: #ffffff;
         }
 
-        .sidebar-btn.btn-power-red {
+        .nut-thanh-ben.nut-tat-nguon-do {
             background: linear-gradient(180deg, #d32f2f 0%, #b71c1c 100%);
             border-color: #8b1116;
             color: #ffffff;
         }
 
-        .sidebar-btn svg {
+        .nut-thanh-ben svg {
             width: 22px;
             height: 22px;
             fill: #ffffff;
         }
 
-        /* Thông báo trạng thái / Alert */
-        .pos-alert-toast {
+        /* 8. HỘP THÔNG BÁO TRẠNG THÁI */
+        .hop-thong-bao-trang-thai {
             display: none;
             margin-top: 12px;
             padding: 8px 12px;
@@ -427,29 +422,29 @@
             animation: fadeIn 0.2s ease;
         }
 
-        .pos-alert-toast.error {
+        .hop-thong-bao-trang-thai.loi {
             display: block;
             background-color: #f8d7da;
             color: #842029;
             border: 1px solid #f5c2c7;
         }
 
-        .pos-alert-toast.success {
+        .hop-thong-bao-trang-thai.thanh-cong {
             display: block;
             background-color: #d1e7dd;
             color: #0f5132;
             border: 1px solid #badbcc;
         }
 
-        .pos-alert-toast.info {
+        .hop-thong-bao-trang-thai.thong-tin {
             display: block;
             background-color: #cff4fc;
             color: #055160;
             border: 1px solid #b6effb;
         }
 
-        /* Hộp thoại trợ giúp tài khoản mẫu (Click nút bóng đèn) */
-        .sample-accounts-modal {
+        /* 9. HỘP THOẠI TÀI KHOẢN MẪU (BÓNG ĐÈN TRỢ GIÚP) */
+        .hop-thoai-tai-khoan-mau {
             display: none;
             position: fixed;
             top: 50%;
@@ -464,7 +459,7 @@
             z-index: 1000;
         }
 
-        .sample-accounts-modal h4 {
+        .hop-thoai-tai-khoan-mau h4 {
             margin-bottom: 12px;
             font-size: 16px;
             color: #212529;
@@ -473,13 +468,13 @@
             align-items: center;
         }
 
-        .sample-accounts-modal .close-modal {
+        .nut-dong-hop-thoai {
             cursor: pointer;
             font-size: 20px;
             color: #6c757d;
         }
 
-        .sample-item {
+        .muc-tai-khoan-mau {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -493,18 +488,18 @@
             transition: all 0.15s;
         }
 
-        .sample-item:hover {
+        .muc-tai-khoan-mau:hover {
             background-color: #e9ecef;
             border-color: #0d6efd;
             transform: translateX(2px);
         }
 
-        .sample-role {
+        .ten-vai-tro {
             font-weight: 600;
             color: #0d6efd;
         }
 
-        .sample-pin {
+        .ma-pin-nhanh {
             font-size: 11px;
             color: #6c757d;
         }
@@ -516,28 +511,28 @@
     </style>
 </head>
 <body>
-    <div class="pos-container">
-        <!-- Khung chính bên trái -->
-        <div class="pos-main">
-            <!-- Header bar -->
-            <div class="pos-top-bar">
-                <span class="status-badge">ok.</span>
-                <span class="pos-clock" id="liveClock">--:-- --</span>
+    <div class="khung-tong-the">
+        <!-- Khu vực chính bên trái -->
+        <div class="khu-vuc-chinh">
+            <!-- Header bar trạng thái -->
+            <div class="thanh-trang-thai-tren">
+                <span class="huy-hieu-trang-thai">ok.</span>
+                <span class="dong-ho-thoi-gian" id="liveClock">--:-- --</span>
             </div>
 
             <!-- Khu vực trung tâm: Đăng nhập -->
-            <div class="pos-center-stage">
-                <div class="login-card-wrapper">
+            <div class="khu-vuc-dang-nhap-trung-tam">
+                <div class="khung-the-dang-nhap">
                     <!-- Cột thông tin & Form -->
-                    <div class="login-left-col">
-                        <!-- Logo Ushi Mania: Thiết kế dài ra cân đối với form -->
-                        <div class="logo-box">
-                            <div class="logo-badge" title="Ushi Mania">
+                    <div class="cot-trai-bieu-mau">
+                        <!-- Logo Ushi Mania -->
+                        <div class="khung-chua-logo">
+                            <div class="the-logo-nha-hang" title="Ushi Mania">
                                 <img src="~/images/logo-ushi.png" alt="Ushi Mania - Beef Up Mania" />
                             </div>
                         </div>
 
-                        <div class="brand-instruction">
+                        <div class="dong-huong-dan-dang-nhap">
                             Đăng ký thẻ từ hoặc mã với mật khẩu
                         </div>
 
@@ -546,76 +541,76 @@
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="ReturnUrl" id="hiddenReturnUrl" value="@returnUrl" />
 
-                            <div class="input-fields-group">
-                                <div class="pos-input-row focused" id="rowUserCode">
-                                    <label class="input-label" for="txtUserCode">Mã</label>
+                            <div class="nhom-o-nhap-lieu">
+                                <div class="dong-nhap-lieu dang-chon" id="rowUserCode">
+                                    <label class="nhan-o-nhap" for="txtUserCode">Mã</label>
                                     <input type="text" id="txtUserCode" name="Username" value="@Model?.Username" autocomplete="off" autofocus />
                                 </div>
 
-                                <div class="pos-input-row" id="rowPassword">
-                                    <label class="input-label" for="txtPassword">Mật khẩu</label>
+                                <div class="dong-nhap-lieu" id="rowPassword">
+                                    <label class="nhan-o-nhap" for="txtPassword">Mật khẩu</label>
                                     <input type="password" id="txtPassword" name="Password" autocomplete="off" />
                                 </div>
                             </div>
 
                             <!-- Hiển thị thông báo kết quả đăng nhập -->
-                            <div id="loginToast" class="pos-alert-toast @(!string.IsNullOrEmpty(errorMessage) ? "error" : "")">
+                            <div id="loginToast" class="hop-thong-bao-trang-thai @(!string.IsNullOrEmpty(errorMessage) ? "loi" : "")">
                                 @errorMessage
                             </div>
                         </form>
                     </div>
 
                     <!-- Cột bàn phím số (Numpad) -->
-                    <div class="login-right-col">
-                        <div class="pos-numpad-grid">
-                            <button type="button" class="numpad-key" data-key="7">7</button>
-                            <button type="button" class="numpad-key" data-key="8">8</button>
-                            <button type="button" class="numpad-key" data-key="9">9</button>
+                    <div class="cot-phai-ban-phim">
+                        <div class="luoi-ban-phim-so">
+                            <button type="button" class="phim-so" data-key="7">7</button>
+                            <button type="button" class="phim-so" data-key="8">8</button>
+                            <button type="button" class="phim-so" data-key="9">9</button>
 
-                            <button type="button" class="numpad-key" data-key="4">4</button>
-                            <button type="button" class="numpad-key" data-key="5">5</button>
-                            <button type="button" class="numpad-key" data-key="6">6</button>
+                            <button type="button" class="phim-so" data-key="4">4</button>
+                            <button type="button" class="phim-so" data-key="5">5</button>
+                            <button type="button" class="phim-so" data-key="6">6</button>
 
-                            <button type="button" class="numpad-key" data-key="1">1</button>
-                            <button type="button" class="numpad-key" data-key="2">2</button>
-                            <button type="button" class="numpad-key" data-key="3">3</button>
+                            <button type="button" class="phim-so" data-key="1">1</button>
+                            <button type="button" class="phim-so" data-key="2">2</button>
+                            <button type="button" class="phim-so" data-key="3">3</button>
 
-                            <button type="button" class="numpad-key" data-key="0">0</button>
-                            <button type="button" class="numpad-key" data-key=".">.</button>
-                            <button type="button" class="numpad-key key-delete" id="btnDelete">Xóa</button>
+                            <button type="button" class="phim-so" data-key="0">0</button>
+                            <button type="button" class="phim-so" data-key=".">.</button>
+                            <button type="button" class="phim-so phim-xoa" id="btnDelete">Xóa</button>
                         </div>
 
-                        <button type="button" class="btn-pos-submit" id="btnLogin">Đăng nhập</button>
+                        <button type="button" class="nut-dang-nhap" id="btnLogin">Đăng nhập</button>
                     </div>
                 </div>
 
                 <!-- Khẩu hiệu đáy giữa -->
-                <div class="pos-bottom-slogan">
+                <div class="dong-khau-hieu-duoi">
                     THE WORLD CLASS IT SOLUTIONS FOR F&amp;B INDUSTRY
                 </div>
             </div>
 
             <!-- Footer đỏ đáy màn hình -->
-            <div class="pos-footer-bar">
-                <div class="footer-left">
-                    <span class="label-tech">HỖ TRỢ KỸ THUẬT 24/7:</span>
-                    <span class="hotline-num">1900 6140</span>
+            <div class="thanh-footer-do">
+                <div class="footer-ben-trai">
+                    <span class="nhan-ho-tro-ky-thuat">HỖ TRỢ KỸ THUẬT 24/7:</span>
+                    <span class="so-hotline">1900 6140</span>
                 </div>
-                <div class="footer-right">
+                <div class="footer-ben-phai">
                     <svg viewBox="0 0 16 16">
                         <path d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm7.5-6.923c-.67.204-1.335.82-1.887 1.855A7.97 7.97 0 0 0 5.145 4H7.5V1.077zM4.09 4a9.267 9.267 0 0 1 .64-1.539 6.7 6.7 0 0 1 .597-.933A7.025 7.025 0 0 0 2.255 4H4.09zm-.582 3.5c.03-.87.16-1.71.376-2.5H1.542a7.02 7.02 0 0 0 0 5h2.344a14.7 14.7 0 0 1-.377-2.5zm.377 3.5c-.216-.79-.346-1.63-.377-2.5H1.542a7.02 7.02 0 0 0 2.338 4h1.835a9.267 9.267 0 0 1-.64-1.5zM7.5 14.923V12H5.145c.108.736.31 1.41.568 1.968.552 1.035 1.218 1.65 1.887 1.855zm1 0c.67-.204 1.335-.82 1.887-1.855.258-.558.46-1.232.568-1.968H8.5v2.923zm2.5-3.923H8.5V8.5h3.99a14.7 14.7 0 0 1-.377 2.5zm.377-3.5H8.5V5h2.99c.148.804.237 1.644.277 2.5zm-.277-3.5H8.5V1.077c.67.204 1.335.82 1.887 1.855.258.558.46 1.232.568 1.968zM7.5 5V1.077c-.67.204-1.335.82-1.887 1.855A7.97 7.97 0 0 0 5.145 4H7.5zM7.5 8.5H3.51a14.7 14.7 0 0 1 .377-2.5H7.5V8.5zm0 2.5H3.51c.03.87.16 1.71.377 2.5H7.5V11z"/>
                     </svg>
-                    <a href="https://www.dcorp.com.vn" target="_blank" rel="noopener">www.dcorp.com.vn</a>
+                    <a href="https://www.ushimania.vn" target="_blank" rel="noopener">www.ushimania.com.vn</a>
                 </div>
             </div>
         </div>
 
         <!-- Thanh công cụ dọc phía bên phải -->
-        <div class="pos-sidebar">
+        <div class="thanh-cong-cu-phai">
             <!-- Nhóm nút trên -->
-            <div class="sidebar-btn-group-top">
+            <div class="nhom-nut-ben-tren">
                 <!-- Nút X đỏ: Xóa trắng form -->
-                <button type="button" class="sidebar-btn btn-close-red" id="btnSideClose" title="Xóa trắng dữ liệu">
+                <button type="button" class="nut-thanh-ben nut-xoa-trang-do" id="btnSideClose" title="Xóa trắng dữ liệu">
                     <svg viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0z" />
                         <path fill-rule="evenodd" d="M2.146 2.146a.5.5 0 0 0 0 .708l11 11a.5.5 0 0 0 .708-.708l-11-11a.5.5 0 0 0-.708 0z" />
@@ -623,14 +618,14 @@
                 </button>
 
                 <!-- Nút chuyển đổi xanh dương: Hoán đổi ô nhập liệu -->
-                <button type="button" class="sidebar-btn btn-swap-blue" id="btnSideSwap" title="Chuyển đổi ô nhập">
+                <button type="button" class="nut-thanh-ben nut-hoan-doi-xanh" id="btnSideSwap" title="Chuyển đổi ô nhập">
                     <svg viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5zm14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5z"/>
                     </svg>
                 </button>
 
                 <!-- Nút bóng đèn xanh da trời: Mở danh sách tài khoản mẫu để test -->
-                <button type="button" class="sidebar-btn btn-bulb-cyan" id="btnSideBulb" title="Tài khoản mẫu từ Database">
+                <button type="button" class="nut-thanh-ben nut-bong-den-tro-giup" id="btnSideBulb" title="Tài khoản mẫu từ Database">
                     <svg viewBox="0 0 16 16">
                         <path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13a.5.5 0 0 1 0 1 .5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1 0-1 .5.5 0 0 1 0-1 .5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm6-5a5 5 0 0 0-3.479 8.592c.263.254.514.564.676.941L5.83 12h4.342l.632-1.467c.162-.377.413-.687.676-.941A5 5 0 0 0 8 1z"/>
                     </svg>
@@ -638,19 +633,19 @@
             </div>
 
             <!-- Các ô chức năng trống ở giữa -->
-            <div class="sidebar-btn-group-middle">
-                <button type="button" class="sidebar-btn btn-slot-gray" tabindex="-1"></button>
-                <button type="button" class="sidebar-btn btn-slot-gray" tabindex="-1"></button>
-                <button type="button" class="sidebar-btn btn-slot-gray" tabindex="-1"></button>
-                <button type="button" class="sidebar-btn btn-slot-gray" tabindex="-1"></button>
-                <button type="button" class="sidebar-btn btn-slot-gray" tabindex="-1"></button>
-                <button type="button" class="sidebar-btn btn-slot-gray" tabindex="-1"></button>
+            <div class="nhom-o-trong-o-giua">
+                <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
+                <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
+                <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
+                <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
+                <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
+                <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
             </div>
 
             <!-- Nhóm nút dưới -->
-            <div class="sidebar-btn-group-bottom">
+            <div class="nhom-nut-ben-duoi">
                 <!-- Nút Reload xám -->
-                <button type="button" class="sidebar-btn btn-refresh-gray" id="btnSideRefresh" title="Tải lại giao diện">
+                <button type="button" class="nut-thanh-ben nut-tai-lai-xam" id="btnSideRefresh" title="Tải lại giao diện">
                     <svg viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
                         <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
@@ -658,7 +653,7 @@
                 </button>
 
                 <!-- Nút Tắt nguồn đỏ -->
-                <button type="button" class="sidebar-btn btn-power-red" id="btnSidePower" title="Tắt / Khóa hệ thống">
+                <button type="button" class="nut-thanh-ben nut-tat-nguon-do" id="btnSidePower" title="Tắt / Khóa hệ thống">
                     <svg viewBox="0 0 16 16">
                         <path d="M7.5 1v7h1V1h-1z"/>
                         <path d="M3 8.812a4.999 4.999 0 0 1 2.578-4.375l-.485-.874A6 6 0 1 0 11 3.563l-.485.874A5 5 0 1 1 3 8.812z"/>
@@ -669,43 +664,43 @@
     </div>
 
     <!-- Hộp thoại mẫu tài khoản (Seed Data từ SQL) -->
-    <div class="sample-accounts-modal" id="sampleAccountsModal">
+    <div class="hop-thoai-tai-khoan-mau" id="sampleAccountsModal">
         <h4>
             <span>Tài khoản mẫu hệ thống</span>
-            <span class="close-modal" id="btnCloseModal">&times;</span>
+            <span class="nut-dong-hop-thoai" id="btnCloseModal">&times;</span>
         </h4>
         <div style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">
             Nhấp để tự động điền thông tin đăng nhập:
         </div>
-        <div class="sample-item" onclick="quickFill('quanly', 'QuanLy@123')">
+        <div class="muc-tai-khoan-mau" onclick="quickFill('quanly', 'QuanLy@123')">
             <div>
-                <div class="sample-role">Quản lý (QUAN_LY)</div>
+                <div class="ten-vai-tro">Quản lý (QUAN_LY)</div>
                 <div style="color: #495057;">User: <b>quanly</b> | MK: <b>QuanLy@123</b></div>
-                <div class="sample-pin">Quyền: <b>Xem tất cả các trang</b> | PIN: <b>1234</b></div>
+                <div class="ma-pin-nhanh">Quyền: <b>Xem tất cả các trang</b> | PIN: <b>1234</b></div>
             </div>
             <span style="font-size: 12px; color: #28a745; font-weight: bold;">Chọn &rarr;</span>
         </div>
-        <div class="sample-item" onclick="quickFill('phucvu', 'PhucVu@123')">
+        <div class="muc-tai-khoan-mau" onclick="quickFill('phucvu', 'PhucVu@123')">
             <div>
-                <div class="sample-role">Phục vụ bàn (PHUC_VU)</div>
+                <div class="ten-vai-tro">Phục vụ bàn (PHUC_VU)</div>
                 <div style="color: #495057;">User: <b>phucvu</b> | MK: <b>PhucVu@123</b></div>
-                <div class="sample-pin">Quyền: <b>Sơ đồ bàn, Order POS</b> | PIN: <b>1111</b></div>
+                <div class="ma-pin-nhanh">Quyền: <b>Sơ đồ bàn, Order POS</b> | PIN: <b>1111</b></div>
             </div>
             <span style="font-size: 12px; color: #28a745; font-weight: bold;">Chọn &rarr;</span>
         </div>
-        <div class="sample-item" onclick="quickFill('thungan', 'ThuNgan@123')">
+        <div class="muc-tai-khoan-mau" onclick="quickFill('thungan', 'ThuNgan@123')">
             <div>
-                <div class="sample-role">Thu ngân (THU_NGAN)</div>
+                <div class="ten-vai-tro">Thu ngân (THU_NGAN)</div>
                 <div style="color: #495057;">User: <b>thungan</b> | MK: <b>ThuNgan@123</b></div>
-                <div class="sample-pin">Quyền: <b>Sơ đồ bàn, Order POS, Kho &amp; Báo cáo</b> | PIN: <b>2222</b></div>
+                <div class="ma-pin-nhanh">Quyền: <b>Sơ đồ bàn, Order POS, Kho &amp; Báo cáo</b> | PIN: <b>2222</b></div>
             </div>
             <span style="font-size: 12px; color: #28a745; font-weight: bold;">Chọn &rarr;</span>
         </div>
-        <div class="sample-item" onclick="quickFill('bep', 'Bep@123')">
+        <div class="muc-tai-khoan-mau" onclick="quickFill('bep', 'Bep@123')">
             <div>
-                <div class="sample-role">Đầu bếp (BEP)</div>
+                <div class="ten-vai-tro">Đầu bếp (BEP)</div>
                 <div style="color: #495057;">User: <b>bep</b> | MK: <b>Bep@123</b></div>
-                <div class="sample-pin">Quyền: <b>Bếp KDS, Kho &amp; Báo cáo</b> | PIN: <b>3333</b></div>
+                <div class="ma-pin-nhanh">Quyền: <b>Bếp KDS, Kho &amp; Báo cáo</b> | PIN: <b>3333</b></div>
             </div>
             <span style="font-size: 12px; color: #28a745; font-weight: bold;">Chọn &rarr;</span>
         </div>
@@ -739,11 +734,11 @@
         function setActiveInput(target) {
             activeInput = target;
             if (target === txtUserCode) {
-                rowUserCode.classList.add('focused');
-                rowPassword.classList.remove('focused');
+                rowUserCode.classList.add('dang-chon');
+                rowPassword.classList.remove('dang-chon');
             } else {
-                rowPassword.classList.add('focused');
-                rowUserCode.classList.remove('focused');
+                rowPassword.classList.add('dang-chon');
+                rowUserCode.classList.remove('dang-chon');
             }
             target.focus();
         }
@@ -755,7 +750,7 @@
         rowPassword.addEventListener('click', () => setActiveInput(txtPassword));
 
         // 3. Phím số trên Numpad ảo
-        document.querySelectorAll('.numpad-key[data-key]').forEach(btn => {
+        document.querySelectorAll('.phim-so[data-key]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const char = btn.getAttribute('data-key');
                 activeInput.value += char;
@@ -784,7 +779,7 @@
         document.getElementById('btnSideClose').addEventListener('click', () => {
             txtUserCode.value = '';
             txtPassword.value = '';
-            loginToast.className = 'pos-alert-toast';
+            loginToast.className = 'hop-thong-bao-trang-thai';
             loginToast.textContent = '';
             setActiveInput(txtUserCode);
         });
@@ -793,7 +788,7 @@
         document.getElementById('btnSideRefresh').addEventListener('click', () => {
             txtUserCode.value = '';
             txtPassword.value = '';
-            loginToast.className = 'pos-alert-toast';
+            loginToast.className = 'hop-thong-bao-trang-thai';
             loginToast.textContent = '';
             setActiveInput(txtUserCode);
         });
@@ -803,7 +798,7 @@
             if (confirm('Khóa màn hình làm việc POS Ushi Mania?')) {
                 txtUserCode.value = '';
                 txtPassword.value = '';
-                showToast('Màn hình POS đã được khóa an toàn.', 'info');
+                showToast('Màn hình POS đã được khóa an toàn.', 'thong-tin');
             }
         });
 
@@ -826,29 +821,29 @@
         // 10. Xử lý hiển thị thông báo
         function showToast(msg, type) {
             loginToast.textContent = msg;
-            loginToast.className = `pos-alert-toast ${type}`;
+            loginToast.className = `hop-thong-bao-trang-thai ${type}`;
         }
 
-        // 11. Xử lý Đăng nhập qua Backend API -> Thành công chuyển về trang chủ (/)
+        // 11. Xử lý Đăng nhập qua Backend API -> Thành công chuyển về màn hình phân quyền tương ứng
         async function submitLogin() {
             const username = txtUserCode.value.trim();
             const password = txtPassword.value.trim();
             const returnUrl = document.getElementById('hiddenReturnUrl').value;
 
             if (!username) {
-                showToast('Vui lòng nhập Mã nhân viên / Tên đăng nhập', 'error');
+                showToast('Vui lòng nhập Mã nhân viên / Tên đăng nhập', 'loi');
                 setActiveInput(txtUserCode);
                 return;
             }
 
             if (!password) {
-                showToast('Vui lòng nhập Mật khẩu / Mã PIN', 'error');
+                showToast('Vui lòng nhập Mật khẩu / Mã PIN', 'loi');
                 setActiveInput(txtPassword);
                 return;
             }
 
             btnLogin.disabled = true;
-            showToast('Đang xác thực thông tin...', 'info');
+            showToast('Đang xác thực thông tin...', 'thong-tin');
 
             try {
                 const response = await fetch('/Home/LoginApi', {
@@ -870,12 +865,12 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    showToast(result.message + ' - Đang vào hệ thống...', 'success');
+                    showToast(result.message + ' - Đang vào hệ thống...', 'thanh-cong');
                     setTimeout(() => {
                         window.location.href = result.redirectUrl || '/Home/SoDoBan';
                     }, 500);
                 } else {
-                    showToast(result.message || 'Mã hoặc mật khẩu không đúng.', 'error');
+                    showToast(result.message || 'Mã hoặc mật khẩu không đúng.', 'loi');
                     btnLogin.disabled = false;
                 }
             } catch (err) {
