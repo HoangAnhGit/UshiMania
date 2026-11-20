@@ -39,7 +39,7 @@ public sealed class ThongKeBLL
     {
         if (fromDate.HasValue && toDate.HasValue && fromDate.Value.Date > toDate.Value.Date)
         {
-            throw new ArgumentException("Start date must not be after end date.");
+            throw new ArgumentException("Từ ngày không được lớn hơn đến ngày.");
         }
     }
 }

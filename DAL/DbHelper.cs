@@ -27,7 +27,7 @@ public sealed class DbHelper
 
         if (transaction is not null && !ReferenceEquals(transaction.Connection, connection))
         {
-            throw new ArgumentException("The transaction must belong to the supplied connection.", nameof(transaction));
+            throw new ArgumentException("Giao dịch (transaction) phải thuộc về kết nối được cung cấp.", nameof(transaction));
         }
 
         return new SqlCommand(commandText, connection, transaction);

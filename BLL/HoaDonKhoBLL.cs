@@ -26,22 +26,22 @@ public sealed class HoaDonKhoBLL
     {
         if (orderId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(orderId), "Order ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(orderId), "Mã đơn hàng phải là số dương.");
         }
 
         if (cashierId is <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(cashierId), "Cashier ID must be positive when supplied.");
+            throw new ArgumentOutOfRangeException(nameof(cashierId), "Mã thu ngân phải là số dương khi cung cấp.");
         }
 
         if (string.IsNullOrWhiteSpace(paymentMethod) || !VALID_PAYMENT_METHODS.Contains(paymentMethod))
         {
-            throw new ArgumentException("Unsupported payment method.", nameof(paymentMethod));
+            throw new ArgumentException("Phương thức thanh toán không được hỗ trợ.", nameof(paymentMethod));
         }
 
         if (discount < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(discount), "Discount cannot be negative.");
+            throw new ArgumentOutOfRangeException(nameof(discount), "Số tiền giảm giá không được âm.");
         }
 
         return hoaDonKhoDAL.ThanhToanVaTruKho(orderId, cashierId, paymentMethod, discount);

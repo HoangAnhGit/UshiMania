@@ -595,6 +595,15 @@ body {
   color: #fff;
   font-weight: 800;
   box-shadow: 0 2px 4px #0002;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.order-left-actions button:hover,
+.order-main-button:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  transform: translateY(-1px);
 }
 
 .order-action-blue,
@@ -652,19 +661,43 @@ body {
 .category-tile,
 .dish-tile {
   min-height: 80px;
-  border: 0;
+  border: 2px solid transparent;
   border-radius: 9px;
   padding: 10px;
   background: #1a237e;
   color: #fff;
   font-weight: 750;
-  box-shadow: 0 2px 5px #0002;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
 }
 
-.category-tile.active,
+.category-tile:hover,
+.dish-tile:hover {
+  background: #2563eb;
+  color: #ffffff;
+  border-color: #93c5fd;
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.45);
+  transform: translateY(-3px);
+  z-index: 2;
+}
+
+.category-tile.active {
+  background: #0d6efd;
+  color: #ffffff;
+  border-color: #60a5fa;
+  outline: 3px solid #bfdbfe;
+  box-shadow: 0 0 0 2px #1d4ed8, 0 4px 12px rgba(13, 110, 253, 0.4);
+}
+
 .dish-tile.active {
-  background: #283593;
-  outline: 3px solid #90caf9;
+  background: #0284c7;
+  color: #ffffff;
+  border-color: #38bdf8;
+  outline: 3px solid #ffc107;
+  box-shadow: 0 0 0 2px #0369a1, 0 6px 18px rgba(2, 132, 199, 0.5);
+  transform: translateY(-2px);
 }
 
 .menu-grid {
@@ -689,10 +722,24 @@ body {
 
 .dish-tile strong {
   font-size: .93rem;
+  transition: color 0.15s ease;
 }
 
 .dish-tile span {
   font-size: .9rem;
+  transition: all 0.15s ease;
+}
+
+.dish-tile:hover span {
+  color: #fef08a;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+}
+
+.dish-tile.active span {
+  color: #ffeb3b;
+  font-weight: 800;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .payment-panel {
@@ -724,16 +771,27 @@ body {
 
 .payment-method {
   min-height: 78px;
-  border: 0;
+  border: 2px solid transparent;
   border-radius: 8px;
   padding: 8px;
   background: #283593;
   color: #fff;
   font-weight: 750;
+  cursor: pointer;
+  transition: all 0.18s ease-in-out;
+}
+
+.payment-method:hover {
+  background: #1976d2;
+  border-color: #90caf9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.35);
 }
 
 .payment-method.active {
-  outline: 4px solid #2e7d32;
+  background: #1b5e20;
+  border-color: #81c784;
+  outline: 4px solid #4caf50;
 }
 
 .vietqr-box {
@@ -798,11 +856,24 @@ body {
   color: #fff;
   font-size: 1.12rem;
   font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.order-numpad button:hover {
+  background: #757575;
+  filter: brightness(1.2);
+  transform: scale(1.02);
 }
 
 .order-numpad .keypad-clear {
   background: #c62828;
   font-size: .85rem;
+}
+
+.order-numpad .keypad-clear:hover {
+  background: #d32f2f;
+  filter: brightness(1.15);
 }
 
 .order-main-actions {

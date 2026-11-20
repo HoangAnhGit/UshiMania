@@ -38,22 +38,22 @@ public sealed class OrderBLL
     {
         if (orderId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(orderId), "Order ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(orderId), "Mã đơn hàng phải là số dương.");
         }
 
         if (menuItemId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(menuItemId), "Menu item ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(menuItemId), "Mã món ăn phải là số dương.");
         }
 
         if (quantity <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(quantity), "Số lượng phải là số dương.");
         }
 
         if (note?.Length > 200)
         {
-            throw new ArgumentException("Dish note cannot exceed 200 characters.", nameof(note));
+            throw new ArgumentException("Ghi chú món không được vượt quá 200 ký tự.", nameof(note));
         }
 
         return orderDAL.AddItem(orderId, menuItemId, quantity, note);
@@ -63,29 +63,29 @@ public sealed class OrderBLL
     {
         if (tableId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(tableId), "Table ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(tableId), "Mã bàn phải là số dương.");
         }
 
         if (items is null || items.Count == 0)
         {
-            throw new ArgumentException("At least one menu item is required.", nameof(items));
+            throw new ArgumentException("Cần chọn ít nhất một món ăn.", nameof(items));
         }
 
         foreach (var item in items)
         {
             if (item.MaMonAn <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(items), "Menu item ID must be positive.");
+                throw new ArgumentOutOfRangeException(nameof(items), "Mã món ăn phải là số dương.");
             }
 
             if (item.SoLuong <= 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(items), "Quantity must be positive.");
+                throw new ArgumentOutOfRangeException(nameof(items), "Số lượng phải là số dương.");
             }
 
             if (item.GhiChuMon?.Length > 200)
             {
-                throw new ArgumentException("Dish note cannot exceed 200 characters.", nameof(items));
+                throw new ArgumentException("Ghi chú món không được vượt quá 200 ký tự.", nameof(items));
             }
         }
 
@@ -106,7 +106,7 @@ public sealed class OrderBLL
     {
         if (tableId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(tableId), "Table ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(tableId), "Mã bàn phải là số dương.");
         }
 
         return orderDAL.GetOpenOrderForTable(tableId);
@@ -116,12 +116,12 @@ public sealed class OrderBLL
     {
         if (detailId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(detailId), "Order detail ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(detailId), "Mã chi tiết đơn hàng phải là số dương.");
         }
 
         if (string.IsNullOrWhiteSpace(progress) || !VALID_KITCHEN_PROGRESS.Contains(progress))
         {
-            throw new ArgumentException("Unsupported kitchen progress.", nameof(progress));
+            throw new ArgumentException("Tiến độ bếp không được hỗ trợ.", nameof(progress));
         }
 
         return orderDAL.UpdateKitchenProgress(detailId, progress);

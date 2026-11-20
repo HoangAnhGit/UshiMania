@@ -1,13 +1,13 @@
 @{
     Layout = null;
-    ViewData["Title"] = "Guest Order";
+    ViewData["Title"] = "Gọi món tại bàn";
 }
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Ushi Mania - Guest Order</title>
+    <title>Ushi Mania - Gọi món tại bàn</title>
     <link rel="stylesheet" href="/css/guest-order.css" asp-append-version="true" />
 </head>
 <body>
@@ -136,15 +136,15 @@
                             .append($('<h2>').text(readValue(item, 'tenMonAn', 'TenMonAn')))
                             .append($('<strong class="guest-price">').text(money(readValue(item, 'donGia', 'DonGia')))));
                     const quantityControls = $('<div class="guest-quantity-controls">')
-                        .append($('<button type="button" class="quantity-button" aria-label="Decrease quantity">-</button>')
+                        .append($('<button type="button" class="quantity-button" aria-label="Giảm số lượng">-</button>')
                             .on('click', () => changeQuantity(id, -1)))
                         .append($('<span class="guest-quantity">').text(state.quantity))
-                        .append($('<button type="button" class="quantity-button" aria-label="Increase quantity">+</button>')
+                        .append($('<button type="button" class="quantity-button" aria-label="Tăng số lượng">+</button>')
                             .on('click', () => changeQuantity(id, 1)));
                     card.append(quantityControls);
                     if (state.quantity > 0) {
-                        card.append($('<label class="guest-note-label">Ghi ch\u00fa m\u00f3n</label>'));
-                        card.append($('<textarea class="guest-note" maxlength="200" placeholder="V\u00ed d\u1ee5: kh\u00f4ng h\u00e0nh, ch\u00edn k\u1ef9"></textarea>')
+                        card.append($('<label class="guest-note-label">Ghi chú món</label>'));
+                        card.append($('<textarea class="guest-note" maxlength="200" placeholder="Ví dụ: không hành, chín kỹ"></textarea>')
                             .val(state.note)
                             .on('input', function () {
                                 state.note = $(this).val();
@@ -166,33 +166,33 @@
 
             function loadTable() {
                 if (!tableId) {
-                    $('#guest-table-name').text('Invalid table');
-                    notify('Invalid table link.', true);
+                    $('#guest-table-name').text('Bàn không hợp lệ');
+                    notify('Liên kết bàn không hợp lệ.', true);
                     return;
                 }
                 $.getJSON('/api/restaurant/tables')
                     .done(response => {
                         if (!response?.success) {
-                            notify(response?.message || 'Could not load table.', true);
+                            notify(response?.message || 'Không thể tải thông tin bàn.', true);
                             return;
                         }
                         table = (response.data || []).find(value => Number(readValue(value, 'maBan', 'MaBan')) === tableId) || null;
                         if (!table) {
-                            $('#guest-table-name').text('Table not found');
-                            notify('Table not found.', true);
+                            $('#guest-table-name').text('Không tìm thấy bàn');
+                            notify('Không tìm thấy thông tin bàn.', true);
                             return;
                         }
                         renderTable();
                         updateCartSummary();
                     })
-                    .fail(() => notify('Could not connect to the table service.', true));
+                    .fail(() => notify('Không thể kết nối đến máy chủ bàn.', true));
             }
 
             function loadMenu() {
                 $.getJSON('/api/restaurant/menu')
                     .done(response => {
                         if (!response?.success) {
-                            $('#guest-menu').text(response?.message || 'Could not load menu.');
+                            $('#guest-menu').text(response?.message || 'Không thể tải thực đơn.');
                             return;
                         }
                         categories = response.data || [];
@@ -200,7 +200,7 @@
                         renderCategories();
                         renderMenu();
                     })
-                    .fail(() => $('#guest-menu').text('Could not connect to the menu service.'));
+                    .fail(() => $('#guest-menu').text('Không thể kết nối đến dịch vụ thực đơn.'));
             }
 
             $('#send-guest-order').on('click', function () {
@@ -211,11 +211,11 @@
                     }
                 });
                 if (!tableId || !items.length) {
-                    notify('Select at least one dish first.', true);
+                    notify('Vui lòng chọn ít nhất một món.', true);
                     return;
                 }
 
-                const button = $(this).prop('disabled', true).text('Sending...');
+                const button = $(this).prop('disabled', true).text('Đang gửi...');
                 $.ajax({
                     url: '/api/restaurant/order',
                     method: 'POST',
@@ -224,16 +224,16 @@
                     data: JSON.stringify({ maBan: tableId, items })
                 }).done(response => {
                     if (!response?.success) {
-                        notify(response?.message || 'Could not send order.', true);
-                        button.text('G\u1eedi order t\u1edbi b\u1ebfp');
+                        notify(response?.message || 'Không thể gửi order.', true);
+                        button.text('Gửi order tới bếp');
                         updateCartSummary();
                         return;
                     }
                     $('#guest-app > :not(.guest-header):not(.guest-success):not(.guest-message)').prop('hidden', true);
                     $('#guest-success').prop('hidden', false);
                 }).fail(xhr => {
-                    notify(xhr.responseJSON?.message || 'Could not send order.', true);
-                    button.text('G\u1eedi order t\u1edbi b\u1ebfp');
+                    notify(xhr.responseJSON?.message || 'Không thể gửi order.', true);
+                    button.text('Gửi order tới bếp');
                     updateCartSummary();
                 });
             });

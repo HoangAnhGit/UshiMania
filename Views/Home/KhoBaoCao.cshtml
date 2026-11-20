@@ -184,7 +184,7 @@
                     return;
                 }
 
-                const table = $('<table class="report-table"><thead><tr><th>Th\u1eddi gian</th><th>Nguy\u00ean li\u1ec7u</th><th>Order</th><th>Bi\u1ebfn \u0111\u1ed9ng</th><th>S\u1ed1 l\u01b0\u1ee3ng</th></tr></thead><tbody></tbody></table>');
+                const table = $('<table class="report-table"><thead><tr><th>Thời gian</th><th>Nguyên liệu</th><th>Đơn hàng</th><th>Biến động</th><th>Số lượng</th></tr></thead><tbody></tbody></table>');
                 inventoryHistoryRows.forEach(item => {
                     const time = new Date(readValue(item, 'thoiGian', 'ThoiGian')).toLocaleString('vi-VN');
                     table.find('tbody').append($('<tr>')

@@ -29,12 +29,12 @@ public sealed class BanAnBLL
     {
         if (tableId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(tableId), "Table ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(tableId), "Mã bàn phải là số dương.");
         }
 
         if (string.IsNullOrWhiteSpace(status) || !VALID_STATUSES.Contains(status))
         {
-            throw new ArgumentException("Unsupported table status.", nameof(status));
+            throw new ArgumentException("Trạng thái bàn không được hỗ trợ.", nameof(status));
         }
 
         return banAnDAL.ChangeStatus(tableId, status);
@@ -44,17 +44,17 @@ public sealed class BanAnBLL
     {
         if (sourceTableId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(sourceTableId), "Table ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(sourceTableId), "Mã bàn phải là số dương.");
         }
 
         if (targetTableId <= 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(targetTableId), "Table ID must be positive.");
+            throw new ArgumentOutOfRangeException(nameof(targetTableId), "Mã bàn phải là số dương.");
         }
 
         if (sourceTableId == targetTableId)
         {
-            throw new ArgumentException("Source and target tables must be different.");
+            throw new ArgumentException("Bàn nguồn và bàn đích phải khác nhau.");
         }
 
         return banAnDAL.MergeOrTransfer(sourceTableId, targetTableId);

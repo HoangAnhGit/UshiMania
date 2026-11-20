@@ -70,7 +70,7 @@
                     const ticket = $('<article class="kitchen-ticket">').addClass(`ticket-${status.toLowerCase()}`);
                     const head = $('<header class="ticket-header">')
                         .append($('<span class="ticket-table">').text(tableNumber))
-                        .append($('<span class="ticket-order-id">').text(`Order #${orderId}`));
+                        .append($('<span class="ticket-order-id">').text(`Đơn #${orderId}`));
                     ticket.append(head);
                     ticket.append($('<div class="ticket-call-time">').text(`G\u1ecdi l\u00fac: ${callTime(readValue(order, 'thoiGianGoi', 'ThoiGianGoi'))}`));
                     ticket.append($('<h2 class="ticket-dish-name">').text(dishName));
