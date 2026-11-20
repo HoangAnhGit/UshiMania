@@ -499,8 +499,18 @@
             $('#print-receipt').on('click', () => window.print());
             $('#transfer-table, #merge-table').on('click', () => notify('Table transfer/merge requires a dedicated API action.', true));
 
+            if (typeof signalR !== 'undefined') {
+                const hubConnection = new signalR.HubConnectionBuilder()
+                    .withUrl('/restaurantHub')
+                    .withAutomaticReconnect()
+                    .build();
+                hubConnection.on('ReceiveDataUpdate', loadTables);
+                hubConnection.start().catch(() => {});
+            }
+
             loadMenu();
             loadTables();
+            window.setInterval(loadTables, 30000);
         });
     </script>
 }

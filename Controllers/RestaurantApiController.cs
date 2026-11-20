@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using UshiMania.BLL;
 using UshiMania.DAL;
+using UshiMania.Hubs;
 using UshiMania.Models;
 
 namespace UshiMania.Controllers;
@@ -13,15 +15,20 @@ public sealed class RestaurantApiController : Controller
     private readonly OrderBLL orderBLL;
     private readonly HoaDonKhoBLL hoaDonKhoBLL;
     private readonly ThongKeBLL thongKeBLL;
+    private readonly IHubContext<RestaurantHub> restaurantHub;
     private readonly ILogger<RestaurantApiController> logger;
 
-    public RestaurantApiController(IConfiguration configuration, ILogger<RestaurantApiController> logger)
+    public RestaurantApiController(
+        IConfiguration configuration,
+        IHubContext<RestaurantHub> restaurantHub,
+        ILogger<RestaurantApiController> logger)
     {
         var dbHelper = new DbHelper(configuration);
         banAnBLL = new BanAnBLL(new BanAnDAL(dbHelper));
         orderBLL = new OrderBLL(new OrderDAL(dbHelper));
         hoaDonKhoBLL = new HoaDonKhoBLL(new HoaDonKhoDAL(dbHelper));
         thongKeBLL = new ThongKeBLL(new ThongKeDAL(dbHelper));
+        this.restaurantHub = restaurantHub;
         this.logger = logger;
     }
 
@@ -40,7 +47,7 @@ public sealed class RestaurantApiController : Controller
     }
 
     [HttpPut("tables/status")]
-    public IActionResult CapNhatTrangThaiBan([FromBody] CapNhatTrangThaiBanRequest? request)
+    public async Task<IActionResult> CapNhatTrangThaiBan([FromBody] CapNhatTrangThaiBanRequest? request)
     {
         try
         {
@@ -50,6 +57,15 @@ public sealed class RestaurantApiController : Controller
             }
 
             var updated = banAnBLL.ChangeTableStatus(request.MaBan, request.TrangThai);
+            if (updated)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "table-status",
+                    tableId = request.MaBan
+                });
+            }
+
             return Json(new
             {
                 success = updated,
@@ -64,7 +80,7 @@ public sealed class RestaurantApiController : Controller
     }
 
     [HttpPost("orders")]
-    public IActionResult TaoHoacCapNhatOrder([FromBody] TaoHoacCapNhatOrderRequest? request)
+    public async Task<IActionResult> TaoHoacCapNhatOrder([FromBody] TaoHoacCapNhatOrderRequest? request)
     {
         try
         {
@@ -126,6 +142,13 @@ public sealed class RestaurantApiController : Controller
                 }
             }
 
+            await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+            {
+                type = "order-updated",
+                tableId = request.MaBan,
+                orderId
+            });
+
             return Json(new
             {
                 success = true,
@@ -140,7 +163,7 @@ public sealed class RestaurantApiController : Controller
     }
 
     [HttpPost("order")]
-    public IActionResult GuestOrder([FromBody] GuestOrderRequest? request)
+    public async Task<IActionResult> GuestOrder([FromBody] GuestOrderRequest? request)
     {
         try
         {
@@ -159,6 +182,13 @@ public sealed class RestaurantApiController : Controller
                     data = (object?)null
                 });
             }
+
+            await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+            {
+                type = "order-updated",
+                tableId = request.MaBan,
+                orderId = orderId.Value
+            });
 
             return Json(new
             {
@@ -221,7 +251,7 @@ public sealed class RestaurantApiController : Controller
     }
 
     [HttpPut("kitchen/items/status")]
-    public IActionResult CapNhatTienDoBep([FromBody] CapNhatTienDoBepRequest? request)
+    public async Task<IActionResult> CapNhatTienDoBep([FromBody] CapNhatTienDoBepRequest? request)
     {
         try
         {
@@ -231,6 +261,15 @@ public sealed class RestaurantApiController : Controller
             }
 
             var updated = orderBLL.UpdateKitchenProgress(request.MaChiTiet, request.TienDoBep);
+            if (updated)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "kitchen-progress",
+                    detailId = request.MaChiTiet
+                });
+            }
+
             return Json(new
             {
                 success = updated,
@@ -245,7 +284,7 @@ public sealed class RestaurantApiController : Controller
     }
 
     [HttpPost("payments")]
-    public IActionResult ThanhToanVaTruKho([FromBody] ThanhToanVaTruKhoRequest? request)
+    public async Task<IActionResult> ThanhToanVaTruKho([FromBody] ThanhToanVaTruKhoRequest? request)
     {
         try
         {
@@ -259,6 +298,15 @@ public sealed class RestaurantApiController : Controller
                 request.MaThuNgan,
                 request.HinhThucTra,
                 request.TienGiamGia);
+
+            if (paid)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "payment-completed",
+                    orderId = request.MaDonHang
+                });
+            }
 
             return Json(new
             {

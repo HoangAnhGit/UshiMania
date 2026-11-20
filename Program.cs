@@ -2,6 +2,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddSignalR();
 builder.Services.AddScoped<UshiMania.DAL.DbHelper>();
 builder.Services.AddScoped<UshiMania.DAL.BanAnDAL>();
 builder.Services.AddScoped<UshiMania.BLL.BanAnBLL>();
@@ -32,6 +33,7 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 app.MapControllers();
+app.MapHub<UshiMania.Hubs.RestaurantHub>("/restaurantHub");
 
 
 app.Run();

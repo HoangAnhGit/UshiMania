@@ -145,8 +145,17 @@
                 renderTickets();
             });
 
+            if (typeof signalR !== 'undefined') {
+                const hubConnection = new signalR.HubConnectionBuilder()
+                    .withUrl('/restaurantHub')
+                    .withAutomaticReconnect()
+                    .build();
+                hubConnection.on('ReceiveDataUpdate', loadKitchenOrders);
+                hubConnection.start().catch(() => {});
+            }
+
             loadKitchenOrders();
-            window.setInterval(loadKitchenOrders, 3000);
+            window.setInterval(loadKitchenOrders, 30000);
         });
     </script>
 }

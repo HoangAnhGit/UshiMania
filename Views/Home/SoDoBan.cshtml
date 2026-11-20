@@ -183,6 +183,15 @@
                 });
             }
 
+            if (typeof signalR !== 'undefined') {
+                const hubConnection = new signalR.HubConnectionBuilder()
+                    .withUrl('/restaurantHub')
+                    .withAutomaticReconnect()
+                    .build();
+                hubConnection.on('ReceiveDataUpdate', loadTables);
+                hubConnection.start().catch(() => {});
+            }
+
             $('#table-grid').on('click', '.table-card', function (event) {
                 if ($(event.target).closest('.table-qr-button').length) return;
                 selectedTableId = Number($(this).attr('data-table-id'));

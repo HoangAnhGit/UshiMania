@@ -51,6 +51,7 @@
     </main>
 
     <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.0/signalr.min.js"></script>
     <script>
         $(function () {
             const tableId = Number(new URLSearchParams(window.location.search).get('maBan') || 0);
@@ -244,6 +245,18 @@
                 renderMenu();
                 updateCartSummary();
             });
+
+            if (typeof signalR !== 'undefined') {
+                const hubConnection = new signalR.HubConnectionBuilder()
+                    .withUrl('/restaurantHub')
+                    .withAutomaticReconnect()
+                    .build();
+                hubConnection.on('ReceiveDataUpdate', () => {
+                    loadTable();
+                    loadMenu();
+                });
+                hubConnection.start().catch(() => {});
+            }
 
             loadTable();
             loadMenu();
