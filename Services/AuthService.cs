@@ -4,18 +4,24 @@ using UshiMania.Models;
 
 namespace UshiMania.Services
 {
-    public interface IAuthService
+    /// <summary>
+    /// Interface dịch vụ xác thực tài khoản
+    /// </summary>
+    public interface IDichVuXacThuc
     {
-        Task<UserAccount?> ValidateUserAsync(string username, string password);
-        UserAccount? GetUserByUsername(string username);
+        Task<TaiKhoanNguoiDung?> ValidateUserAsync(string username, string password);
+        TaiKhoanNguoiDung? GetUserByUsername(string username);
         string ComputeSha256Hash(string rawData);
     }
 
-    public class AuthService : IAuthService
+    /// <summary>
+    /// Class triển khai dịch vụ xác thực tài khoản
+    /// </summary>
+    public class DichVuXacThuc : IDichVuXacThuc
     {
-        private static readonly List<UserAccount> SeedUsers = new()
+        private static readonly List<TaiKhoanNguoiDung> DanhSachTaiKhoanMau = new()
         {
-            new UserAccount
+            new TaiKhoanNguoiDung
             {
                 Id = 1,
                 Username = "quanly",
@@ -27,7 +33,7 @@ namespace UshiMania.Services
                 Phone = "0901000001",
                 PasswordHash = ComputeHashStatic("QuanLy@123")
             },
-            new UserAccount
+            new TaiKhoanNguoiDung
             {
                 Id = 2,
                 Username = "phucvu",
@@ -39,7 +45,7 @@ namespace UshiMania.Services
                 Phone = "0901000002",
                 PasswordHash = ComputeHashStatic("PhucVu@123")
             },
-            new UserAccount
+            new TaiKhoanNguoiDung
             {
                 Id = 3,
                 Username = "bep",
@@ -51,7 +57,7 @@ namespace UshiMania.Services
                 Phone = "0901000003",
                 PasswordHash = ComputeHashStatic("Bep@123")
             },
-            new UserAccount
+            new TaiKhoanNguoiDung
             {
                 Id = 4,
                 Username = "thungan",
@@ -65,29 +71,27 @@ namespace UshiMania.Services
             }
         };
 
-        public Task<UserAccount?> ValidateUserAsync(string username, string password)
+        public Task<TaiKhoanNguoiDung?> ValidateUserAsync(string username, string password)
         {
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             {
-                return Task.FromResult<UserAccount?>(null);
+                return Task.FromResult<TaiKhoanNguoiDung?>(null);
             }
 
             var cleanUser = username.Trim().ToLowerInvariant();
             var cleanPass = password.Trim();
             var hashedInput = ComputeHashStatic(cleanPass);
 
-            // Tìm theo username hoặc mã nhân viên
-            var user = SeedUsers.FirstOrDefault(u =>
+            var user = DanhSachTaiKhoanMau.FirstOrDefault(u =>
                 u.Username.Equals(cleanUser, StringComparison.OrdinalIgnoreCase) ||
                 u.Id.ToString() == cleanUser ||
                 u.QuickPin == cleanUser);
 
             if (user == null)
             {
-                return Task.FromResult<UserAccount?>(null);
+                return Task.FromResult<TaiKhoanNguoiDung?>(null);
             }
 
-            // Kiểm tra mật khẩu (hỗ trợ hash SHA256, plaintext mật khẩu gốc, hoặc mã PIN nhanh)
             bool isPasswordValid =
                 string.Equals(user.PasswordHash, hashedInput, StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(user.PlainPassword, cleanPass, StringComparison.Ordinal) ||
@@ -96,10 +100,10 @@ namespace UshiMania.Services
             return Task.FromResult(isPasswordValid ? user : null);
         }
 
-        public UserAccount? GetUserByUsername(string username)
+        public TaiKhoanNguoiDung? GetUserByUsername(string username)
         {
             if (string.IsNullOrWhiteSpace(username)) return null;
-            return SeedUsers.FirstOrDefault(u => u.Username.Equals(username.Trim(), StringComparison.OrdinalIgnoreCase));
+            return DanhSachTaiKhoanMau.FirstOrDefault(u => u.Username.Equals(username.Trim(), StringComparison.OrdinalIgnoreCase));
         }
 
         public string ComputeSha256Hash(string rawData)

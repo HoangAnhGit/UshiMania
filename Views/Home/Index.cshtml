@@ -1,8 +1,24 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Trang chủ - Ushi Mania";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="khung-trang-chu-chao-mung text-center py-5">
+    <div class="the-gioi-thieu-he-thong card shadow-sm p-5 mx-auto" style="max-width: 650px; background: #2b2d31; color: #fff; border-radius: 8px;">
+        <div class="khung-logo-chao-mung mb-3">
+            <img src="~/images/logo-ushi.png" alt="Ushi Mania" style="height: 60px; object-fit: contain;" />
+        </div>
+        <h2 class="tieu-de-chao-mung fw-bold text-danger mb-2">Hệ Thống Quản Lý POS Ushi Mania</h2>
+        <p class="mo-ta-he-thong text-secondary mb-4">
+            Giải pháp quản trị nhà hàng Yakiniku &amp; Wagyu Steakhouse chuyên nghiệp.
+        </p>
+
+        <div class="nhom-nut-chuc-nang d-flex justify-content-center gap-3">
+            <a asp-action="SoDoBan" asp-controller="Home" class="nut-dieu-huong-chinh btn btn-danger px-4 py-2 fw-bold">
+                Mở Sơ Đồ Bàn POS
+            </a>
+            <a asp-action="DangNhap" asp-controller="Home" class="nut-dieu-huong-phu btn btn-outline-light px-4 py-2">
+                Màn Hình Đăng Nhập
+            </a>
+        </div>
+    </div>
 </div>

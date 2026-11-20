@@ -2,7 +2,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace UshiMania.Models
 {
-    public class LoginViewModel
+    /// <summary>
+    /// ViewModel dùng cho màn hình Đăng nhập POS
+    /// </summary>
+    public class DangNhapViewModel
     {
         [Required(ErrorMessage = "Vui lòng nhập mã hoặc tên đăng nhập")]
         [Display(Name = "Mã")]
@@ -16,7 +19,12 @@ namespace UshiMania.Models
         public string? ReturnUrl { get; set; }
     }
 
-    public class UserAccount
+    public class LoginViewModel : DangNhapViewModel { }
+
+    /// <summary>
+    /// Tài khoản người dùng / nhân viên
+    /// </summary>
+    public class TaiKhoanNguoiDung
     {
         public int Id { get; set; }
         public string Username { get; set; } = string.Empty;
@@ -24,9 +32,11 @@ namespace UshiMania.Models
         public string Role { get; set; } = string.Empty; // QUAN_LY, PHUC_VU, BEP, THU_NGAN
         public string RoleDisplayName { get; set; } = string.Empty;
         public string PasswordHash { get; set; } = string.Empty;
-        public string PlainPassword { get; set; } = string.Empty; // Để hỗ trợ đăng nhập test nhanh
-        public string? QuickPin { get; set; } // Mã PIN bàn phím số POS (vd: 1234, 1111)
+        public string PlainPassword { get; set; } = string.Empty;
+        public string? QuickPin { get; set; }
         public string Phone { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
     }
+
+    public class UserAccount : TaiKhoanNguoiDung { }
 }

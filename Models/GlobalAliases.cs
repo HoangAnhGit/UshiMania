@@ -1,0 +1,11 @@
+global using GuestOrderRequest = UshiMania.Models.YeuCauGoiMonKhach;
+global using GuestOrderItemRequest = UshiMania.Models.ChiTietGoiMonKhach;
+global using KitchenOrderItem = UshiMania.Models.MonAnChoCheBien;
+global using MenuCategory = UshiMania.Models.DanhMucThucDon;
+global using MenuItem = UshiMania.Models.MonAnThucDon;
+global using OrderPOSData = UshiMania.Models.DuLieuDonHangPOS;
+global using OrderPOSLine = UshiMania.Models.DongChiTietDonHang;
+global using UserAccount = UshiMania.Models.TaiKhoanNguoiDung;
+global using LoginViewModel = UshiMania.Models.DangNhapViewModel;
+global using IAuthService = UshiMania.Services.IDichVuXacThuc;
+global using AuthService = UshiMania.Services.DichVuXacThuc;

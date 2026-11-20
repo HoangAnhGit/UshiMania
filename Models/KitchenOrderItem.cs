@@ -1,6 +1,9 @@
 namespace UshiMania.Models;
 
-public sealed class KitchenOrderItem
+/// <summary>
+/// Món ăn chờ Bếp KDS chế biến
+/// </summary>
+public sealed class MonAnChoCheBien
 {
     public int MaChiTiet { get; set; }
     public int MaDonHang { get; set; }

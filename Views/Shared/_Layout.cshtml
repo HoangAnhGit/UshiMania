@@ -12,7 +12,8 @@
     <link rel="stylesheet" href="~/css/qr-modal.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/UshiMania.styles.css" asp-append-version="true" />
     <style>
-        .pos-user-badge {
+        /* Class tiếng Việt cho thông tin nhân viên đăng nhập */
+        .the-nhan-vien-hien-tai, .pos-user-badge {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -22,18 +23,19 @@
             border-radius: 4px;
             font-size: 13px;
         }
-        .pos-role-tag {
+        .the-vai-tro-nhan-vien, .pos-role-tag {
             font-size: 11px;
             font-weight: 700;
             padding: 2px 6px;
             border-radius: 3px;
             text-transform: uppercase;
         }
-        .role-quanly { background-color: #dc3545; color: #fff; }
-        .role-phucvu { background-color: #0d6efd; color: #fff; }
-        .role-thungan { background-color: #198754; color: #fff; }
-        .role-bep { background-color: #ffc107; color: #000; }
-        .btn-pos-logout {
+        .vai-tro-quan-ly, .role-quanly { background-color: #dc3545; color: #fff; }
+        .vai-tro-phuc-vu, .role-phucvu { background-color: #0d6efd; color: #fff; }
+        .vai-tro-thu-ngan, .role-thungan { background-color: #198754; color: #fff; }
+        .vai-tro-dau-bep, .role-bep { background-color: #ffc107; color: #000; }
+
+        .nut-dang-xuat-pos, .btn-pos-logout {
             color: #ffc9c9;
             border: 1px solid rgba(255, 200, 200, 0.4);
             background: transparent;
@@ -43,13 +45,14 @@
             text-decoration: none;
             transition: all 0.15s;
         }
-        .btn-pos-logout:hover {
+        .nut-dang-xuat-pos:hover, .btn-pos-logout:hover {
             color: #fff;
             background: #dc3545;
             border-color: #dc3545;
         }
 
-        /* Kiểu dáng cho các menu bị phân quyền (vẫn hiện nhưng không bấm vào được) */
+        /* Class tiếng Việt cho menu bị phân quyền (vẫn hiện nhưng không bấm được) */
+        .pos-nav-link.bi-khoa-quyen,
         .pos-nav-link.pos-disabled {
             opacity: 0.42;
             cursor: not-allowed !important;
@@ -59,85 +62,81 @@
             box-shadow: none !important;
             user-select: none;
         }
+        .pos-nav-link.bi-khoa-quyen:hover,
         .pos-nav-link.pos-disabled:hover {
             background: rgba(0, 0, 0, 0.35) !important;
             color: #adb5bd !important;
             box-shadow: none !important;
         }
-        .pos-nav-lock {
+        .bieu-tuong-khoa, .pos-nav-lock {
             font-size: 11.5px;
             margin-left: 4px;
             opacity: 0.85;
         }
     </style>
 </head>
-<body class="pos-shell">
+<body class="pos-shell khung-ung-dung-pos">
     @{
         var currentTitle = ViewData["Title"]?.ToString() ?? "";
-        // Định nghĩa quyền hạn:
-        // Quản lý: Tất cả
-        // Phục vụ: Sơ đồ bàn, Order POS
-        // Thu ngân: Sơ đồ bàn, Order POS, Kho & Báo cáo
-        // Bếp: Bếp KDS, Kho & Báo cáo
         var canAccessSoDoBan = User.IsInRole("QUAN_LY") || User.IsInRole("PHUC_VU") || User.IsInRole("THU_NGAN");
         var canAccessOrderPOS = User.IsInRole("QUAN_LY") || User.IsInRole("PHUC_VU") || User.IsInRole("THU_NGAN");
         var canAccessBep = User.IsInRole("QUAN_LY") || User.IsInRole("BEP");
         var canAccessKho = User.IsInRole("QUAN_LY") || User.IsInRole("THU_NGAN") || User.IsInRole("BEP");
     }
 
-    <header class="pos-header">
-        <a class="pos-brand" asp-area="" asp-controller="Home" asp-action="@(User.IsInRole("BEP") ? "ManHinhBep" : "SoDoBan")" aria-label="Ushi Mania">
-            <span class="pos-brand-mark">UM</span>
+    <header class="pos-header thanh-dau-trang-pos">
+        <a class="pos-brand thuong-hieu-pos" asp-area="" asp-controller="Home" asp-action="@(User.IsInRole("BEP") ? "ManHinhBep" : "SoDoBan")" aria-label="Ushi Mania">
+            <span class="pos-brand-mark bieu-tuong-thuong-hieu">UM</span>
             <span>Ushi <strong>Mania</strong></span>
         </a>
 
         <!-- Điều hướng POS: Luôn hiển thị đầy đủ, tab không đủ quyền sẽ bị khóa (không bấm được) -->
-        <nav class="pos-quick-nav" aria-label="Điều hướng POS">
+        <nav class="pos-quick-nav thanh-dieu-huong-nhanh" aria-label="Điều hướng POS">
             @* 1. Sơ đồ bàn: Quản lý, Phục vụ, Thu ngân được bấm *@
             @if (canAccessSoDoBan)
             {
-                <a class="pos-nav-link @(currentTitle == "Sơ đồ bàn" ? "active" : string.Empty)" asp-controller="Home" asp-action="SoDoBan">Sơ đồ bàn</a>
+                <a class="pos-nav-link lien-ket-dieu-huong @(currentTitle == "Sơ đồ bàn" ? "active" : string.Empty)" asp-controller="Home" asp-action="SoDoBan">Sơ đồ bàn</a>
             }
             else
             {
-                <a class="pos-nav-link pos-disabled" href="javascript:void(0)" onclick="notifyNoPermission('Sơ đồ bàn')" title="Bạn không có quyền truy cập Sơ đồ bàn" tabindex="-1">
-                    Sơ đồ bàn <span class="pos-nav-lock">🔒</span>
+                <a class="pos-nav-link lien-ket-dieu-huong bi-khoa-quyen" href="javascript:void(0)" onclick="notifyNoPermission('Sơ đồ bàn')" title="Bạn không có quyền truy cập Sơ đồ bàn" tabindex="-1">
+                    Sơ đồ bàn <span class="bieu-tuong-khoa">🔒</span>
                 </a>
             }
 
             @* 2. Order POS: Quản lý, Phục vụ, Thu ngân được bấm *@
             @if (canAccessOrderPOS)
             {
-                <a class="pos-nav-link @(currentTitle == "Order POS" ? "active" : string.Empty)" asp-controller="Home" asp-action="OrderPOS">Order POS</a>
+                <a class="pos-nav-link lien-ket-dieu-huong @(currentTitle == "Order POS" ? "active" : string.Empty)" asp-controller="Home" asp-action="OrderPOS">Order POS</a>
             }
             else
             {
-                <a class="pos-nav-link pos-disabled" href="javascript:void(0)" onclick="notifyNoPermission('Order POS')" title="Bạn không có quyền truy cập Order POS" tabindex="-1">
-                    Order POS <span class="pos-nav-lock">🔒</span>
+                <a class="pos-nav-link lien-ket-dieu-huong bi-khoa-quyen" href="javascript:void(0)" onclick="notifyNoPermission('Order POS')" title="Bạn không có quyền truy cập Order POS" tabindex="-1">
+                    Order POS <span class="bieu-tuong-khoa">🔒</span>
                 </a>
             }
 
             @* 3. Bếp KDS: Quản lý, Bếp được bấm *@
             @if (canAccessBep)
             {
-                <a class="pos-nav-link @(currentTitle == "Bếp KDS" ? "active" : string.Empty)" asp-controller="Home" asp-action="ManHinhBep">Bếp KDS</a>
+                <a class="pos-nav-link lien-ket-dieu-huong @(currentTitle == "Bếp KDS" ? "active" : string.Empty)" asp-controller="Home" asp-action="ManHinhBep">Bếp KDS</a>
             }
             else
             {
-                <a class="pos-nav-link pos-disabled" href="javascript:void(0)" onclick="notifyNoPermission('Bếp KDS')" title="Bạn không có quyền truy cập Màn hình Bếp KDS" tabindex="-1">
-                    Bếp KDS <span class="pos-nav-lock">🔒</span>
+                <a class="pos-nav-link lien-ket-dieu-huong bi-khoa-quyen" href="javascript:void(0)" onclick="notifyNoPermission('Bếp KDS')" title="Bạn không có quyền truy cập Màn hình Bếp KDS" tabindex="-1">
+                    Bếp KDS <span class="bieu-tuong-khoa">🔒</span>
                 </a>
             }
 
             @* 4. Kho & Báo cáo: Quản lý, Thu ngân, Bếp được bấm *@
             @if (canAccessKho)
             {
-                <a class="pos-nav-link @(currentTitle == "Kho & Báo cáo" ? "active" : string.Empty)" asp-controller="Home" asp-action="KhoBaoCao">Kho &amp; Báo cáo</a>
+                <a class="pos-nav-link lien-ket-dieu-huong @(currentTitle == "Kho & Báo cáo" ? "active" : string.Empty)" asp-controller="Home" asp-action="KhoBaoCao">Kho &amp; Báo cáo</a>
             }
             else
             {
-                <a class="pos-nav-link pos-disabled" href="javascript:void(0)" onclick="notifyNoPermission('Kho & Báo cáo')" title="Bạn không có quyền truy cập Kho & Báo cáo" tabindex="-1">
-                    Kho &amp; Báo cáo <span class="pos-nav-lock">🔒</span>
+                <a class="pos-nav-link lien-ket-dieu-huong bi-khoa-quyen" href="javascript:void(0)" onclick="notifyNoPermission('Kho & Báo cáo')" title="Bạn không có quyền truy cập Kho & Báo cáo" tabindex="-1">
+                    Kho &amp; Báo cáo <span class="bieu-tuong-khoa">🔒</span>
                 </a>
             }
         </nav>
@@ -146,20 +145,20 @@
         <div class="d-flex align-items-center">
             @if (User.Identity != null && User.Identity.IsAuthenticated)
             {
-                var roleClass = User.IsInRole("QUAN_LY") ? "role-quanly"
-                              : User.IsInRole("PHUC_VU") ? "role-phucvu"
-                              : User.IsInRole("THU_NGAN") ? "role-thungan"
-                              : User.IsInRole("BEP") ? "role-bep" : "bg-secondary text-white";
+                var roleClass = User.IsInRole("QUAN_LY") ? "vai-tro-quan-ly"
+                              : User.IsInRole("PHUC_VU") ? "vai-tro-phuc-vu"
+                              : User.IsInRole("THU_NGAN") ? "vai-tro-thu-ngan"
+                              : User.IsInRole("BEP") ? "vai-tro-dau-bep" : "bg-secondary text-white";
 
                 var roleLabel = User.IsInRole("QUAN_LY") ? "Quản lý"
                               : User.IsInRole("PHUC_VU") ? "Phục vụ"
                               : User.IsInRole("THU_NGAN") ? "Thu ngân"
                               : User.IsInRole("BEP") ? "Đầu bếp" : "Nhân viên";
 
-                <div class="pos-user-badge">
-                    <span class="pos-role-tag @roleClass">@roleLabel</span>
+                <div class="the-nhan-vien-hien-tai">
+                    <span class="the-vai-tro-nhan-vien @roleClass">@roleLabel</span>
                     <span class="text-white fw-bold d-none d-sm-inline" title="Nhân viên đang đăng nhập">@User.Identity.Name</span>
-                    <a asp-controller="Home" asp-action="Logout" class="btn-pos-logout" title="Đăng xuất / Khóa màn hình POS">
+                    <a asp-controller="Home" asp-action="Logout" class="nut-dang-xuat-pos" title="Đăng xuất / Khóa màn hình POS">
                         Đăng xuất
                     </a>
                 </div>
@@ -173,14 +172,14 @@
                 </div>
             }
 
-            <div class="pos-clock" aria-label="Giờ hiện tại">
+            <div class="pos-clock dong-ho-he-thong" aria-label="Giờ hiện tại">
                 <span>Giờ hiện tại</span>
                 <time id="current-time">--:--:--</time>
             </div>
         </div>
     </header>
 
-    <main role="main" class="pos-main">
+    <main role="main" class="pos-main noi-dung-chinh-pos">
         @RenderBody()
     </main>
 
