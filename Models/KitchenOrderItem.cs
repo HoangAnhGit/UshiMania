@@ -1,8 +1,5 @@
 namespace UshiMania.Models;
 
-/// <summary>
-/// Món ăn chờ Bếp KDS chế biến
-/// </summary>
 public sealed class MonAnChoCheBien
 {
     public int MaChiTiet { get; set; }

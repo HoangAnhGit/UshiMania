@@ -4,9 +4,6 @@ using UshiMania.Models;
 
 namespace UshiMania.Services
 {
-    /// <summary>
-    /// Interface dịch vụ xác thực tài khoản
-    /// </summary>
     public interface IDichVuXacThuc
     {
         Task<TaiKhoanNguoiDung?> ValidateUserAsync(string username, string password);
@@ -14,9 +11,6 @@ namespace UshiMania.Services
         string ComputeSha256Hash(string rawData);
     }
 
-    /// <summary>
-    /// Class triển khai dịch vụ xác thực tài khoản
-    /// </summary>
     public class DichVuXacThuc : IDichVuXacThuc
     {
         private static readonly List<TaiKhoanNguoiDung> DanhSachTaiKhoanMau = new()

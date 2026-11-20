@@ -28,7 +28,6 @@
             color: #212529;
         }
 
-        /* 1. KHUNG TỔNG THỂ MÀN HÌNH POS */
         .khung-tong-the {
             display: flex;
             width: 100vw;
@@ -37,17 +36,15 @@
             position: relative;
         }
 
-        /* 2. KHU VỰC CHÍNH BÊN TRÁI */
         .khu-vuc-chinh {
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             position: relative;
-            padding-bottom: 34px; /* Chừa chỗ cho thanh footer đỏ */
+            padding-bottom: 34px;
         }
 
-        /* Thanh trạng thái phía trên */
         .thanh-trang-thai-tren {
             display: flex;
             justify-content: space-between;
@@ -71,7 +68,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* 3. KHU VỰC ĐĂNG NHẬP TRUNG TÂM */
         .khu-vuc-dang-nhap-trung-tam {
             flex: 1;
             display: flex;
@@ -89,7 +85,6 @@
             width: 100%;
         }
 
-        /* 4. CỘT BÊN TRÁI: LOGO + CÁC Ô NHẬP LIỆU */
         .cot-trai-bieu-mau {
             flex: 1;
             display: flex;
@@ -185,7 +180,6 @@
             -webkit-user-select: text;
         }
 
-        /* 5. CỘT BÊN PHẢI: BÀN PHÍM SỐ + NÚT ĐĂNG NHẬP */
         .cot-phai-ban-phim {
             display: flex;
             flex-direction: column;
@@ -269,7 +263,6 @@
             text-transform: uppercase;
         }
 
-        /* 6. THANH FOOTER ĐỎ ĐÁY MÀN HÌNH */
         .thanh-footer-do {
             position: absolute;
             bottom: 0;
@@ -320,7 +313,6 @@
             fill: #ffffff;
         }
 
-        /* 7. THANH CÔNG CỤ DỌC BÊN PHẢI */
         .thanh-cong-cu-phai {
             width: 58px;
             height: 100vh;
@@ -409,7 +401,6 @@
             fill: #ffffff;
         }
 
-        /* 8. HỘP THÔNG BÁO TRẠNG THÁI */
         .hop-thong-bao-trang-thai {
             display: none;
             margin-top: 12px;
@@ -443,7 +434,6 @@
             border: 1px solid #b6effb;
         }
 
-        /* 9. HỘP THOẠI TÀI KHOẢN MẪU (BÓNG ĐÈN TRỢ GIÚP) */
         .hop-thoai-tai-khoan-mau {
             display: none;
             position: fixed;
@@ -512,20 +502,15 @@
 </head>
 <body>
     <div class="khung-tong-the">
-        <!-- Khu vực chính bên trái -->
         <div class="khu-vuc-chinh">
-            <!-- Header bar trạng thái -->
             <div class="thanh-trang-thai-tren">
                 <span class="huy-hieu-trang-thai">Sẵn sàng</span>
                 <span class="dong-ho-thoi-gian" id="liveClock">--:-- --</span>
             </div>
 
-            <!-- Khu vực trung tâm: Đăng nhập -->
             <div class="khu-vuc-dang-nhap-trung-tam">
                 <div class="khung-the-dang-nhap">
-                    <!-- Cột thông tin & Form -->
                     <div class="cot-trai-bieu-mau">
-                        <!-- Logo Ushi Mania -->
                         <div class="khung-chua-logo">
                             <div class="the-logo-nha-hang" title="Ushi Mania">
                                 <img src="~/images/logo-ushi.png" alt="Ushi Mania - Beef Up Mania" />
@@ -536,7 +521,6 @@
                             Đăng ký thẻ từ hoặc mã với mật khẩu
                         </div>
 
-                        <!-- Form đăng nhập chuẩn MVC -->
                         <form id="posLoginForm" asp-controller="Home" asp-action="Login" method="post" autocomplete="off">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="ReturnUrl" id="hiddenReturnUrl" value="@returnUrl" />
@@ -553,14 +537,12 @@
                                 </div>
                             </div>
 
-                            <!-- Hiển thị thông báo kết quả đăng nhập -->
                             <div id="loginToast" class="hop-thong-bao-trang-thai @(!string.IsNullOrEmpty(errorMessage) ? "loi" : "")">
                                 @errorMessage
                             </div>
                         </form>
                     </div>
 
-                    <!-- Cột bàn phím số (Numpad) -->
                     <div class="cot-phai-ban-phim">
                         <div class="luoi-ban-phim-so">
                             <button type="button" class="phim-so" data-key="7">7</button>
@@ -584,13 +566,11 @@
                     </div>
                 </div>
 
-                <!-- Khẩu hiệu đáy giữa -->
                 <div class="dong-khau-hieu-duoi">
                     GIẢI PHÁP CÔNG NGHỆ CHUYÊN NGHIỆP CHO NGÀNH F&amp;B
                 </div>
             </div>
 
-            <!-- Footer đỏ đáy màn hình -->
             <div class="thanh-footer-do">
                 <div class="footer-ben-trai">
                     <span class="nhan-ho-tro-ky-thuat">HỖ TRỢ KỸ THUẬT 24/7:</span>
@@ -605,11 +585,8 @@
             </div>
         </div>
 
-        <!-- Thanh công cụ dọc phía bên phải -->
         <div class="thanh-cong-cu-phai">
-            <!-- Nhóm nút trên -->
             <div class="nhom-nut-ben-tren">
-                <!-- Nút X đỏ: Xóa trắng form -->
                 <button type="button" class="nut-thanh-ben nut-xoa-trang-do" id="btnSideClose" title="Xóa trắng dữ liệu">
                     <svg viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M13.854 2.146a.5.5 0 0 1 0 .708l-11 11a.5.5 0 0 1-.708-.708l11-11a.5.5 0 0 1 .708 0z" />
@@ -617,14 +594,12 @@
                     </svg>
                 </button>
 
-                <!-- Nút chuyển đổi xanh dương: Hoán đổi ô nhập liệu -->
                 <button type="button" class="nut-thanh-ben nut-hoan-doi-xanh" id="btnSideSwap" title="Chuyển đổi ô nhập">
                     <svg viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5zm14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5z"/>
                     </svg>
                 </button>
 
-                <!-- Nút bóng đèn xanh da trời: Mở danh sách tài khoản mẫu để test -->
                 <button type="button" class="nut-thanh-ben nut-bong-den-tro-giup" id="btnSideBulb" title="Tài khoản mẫu từ Database">
                     <svg viewBox="0 0 16 16">
                         <path d="M2 6a6 6 0 1 1 10.174 4.31c-.203.196-.359.4-.453.619l-.762 1.769A.5.5 0 0 1 10.5 13a.5.5 0 0 1 0 1 .5.5 0 0 1 0 1l-.224.447a1 1 0 0 1-.894.553H6.618a1 1 0 0 1-.894-.553L5.5 15a.5.5 0 0 1 0-1 .5.5 0 0 1 0-1 .5.5 0 0 1-.46-.302l-.761-1.77a1.964 1.964 0 0 0-.453-.618A5.984 5.984 0 0 1 2 6zm6-5a5 5 0 0 0-3.479 8.592c.263.254.514.564.676.941L5.83 12h4.342l.632-1.467c.162-.377.413-.687.676-.941A5 5 0 0 0 8 1z"/>
@@ -632,7 +607,6 @@
                 </button>
             </div>
 
-            <!-- Các ô chức năng trống ở giữa -->
             <div class="nhom-o-trong-o-giua">
                 <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
                 <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
@@ -642,9 +616,7 @@
                 <button type="button" class="nut-thanh-ben o-chuc-nang-xam" tabindex="-1"></button>
             </div>
 
-            <!-- Nhóm nút dưới -->
             <div class="nhom-nut-ben-duoi">
-                <!-- Nút Reload xám -->
                 <button type="button" class="nut-thanh-ben nut-tai-lai-xam" id="btnSideRefresh" title="Tải lại giao diện">
                     <svg viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
@@ -652,7 +624,6 @@
                     </svg>
                 </button>
 
-                <!-- Nút Tắt nguồn đỏ -->
                 <button type="button" class="nut-thanh-ben nut-tat-nguon-do" id="btnSidePower" title="Tắt / Khóa hệ thống">
                     <svg viewBox="0 0 16 16">
                         <path d="M7.5 1v7h1V1h-1z"/>
@@ -663,7 +634,6 @@
         </div>
     </div>
 
-    <!-- Hộp thoại mẫu tài khoản (Seed Data từ SQL) -->
     <div class="hop-thoai-tai-khoan-mau" id="sampleAccountsModal">
         <h4>
             <span>Tài khoản mẫu hệ thống</span>
@@ -707,7 +677,6 @@
     </div>
 
     <script>
-        // 1. Đồng hồ thời gian thực (định dạng SA/CH: vd 9:24 SA)
         function updateLiveClock() {
             const now = new Date();
             let hours = now.getHours();
@@ -720,7 +689,6 @@
         updateLiveClock();
         setInterval(updateLiveClock, 1000);
 
-        // 2. Quản lý trạng thái con trỏ và ô nhập
         const form = document.getElementById('posLoginForm');
         const txtUserCode = document.getElementById('txtUserCode');
         const txtPassword = document.getElementById('txtPassword');
@@ -749,7 +717,6 @@
         rowUserCode.addEventListener('click', () => setActiveInput(txtUserCode));
         rowPassword.addEventListener('click', () => setActiveInput(txtPassword));
 
-        // 3. Phím số trên Numpad ảo
         document.querySelectorAll('.phim-so[data-key]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const char = btn.getAttribute('data-key');
@@ -759,14 +726,12 @@
             });
         });
 
-        // 4. Phím Xóa trên Numpad
         document.getElementById('btnDelete').addEventListener('click', () => {
             activeInput.value = activeInput.value.slice(0, -1);
             activeInput.dispatchEvent(new Event('input'));
             activeInput.focus();
         });
 
-        // 5. Nút hoán đổi ô nhập (bên thanh dọc)
         document.getElementById('btnSideSwap').addEventListener('click', () => {
             if (activeInput === txtUserCode) {
                 setActiveInput(txtPassword);
@@ -775,7 +740,6 @@
             }
         });
 
-        // 6. Nút X đỏ: Xóa trắng toàn bộ
         document.getElementById('btnSideClose').addEventListener('click', () => {
             txtUserCode.value = '';
             txtPassword.value = '';
@@ -784,7 +748,6 @@
             setActiveInput(txtUserCode);
         });
 
-        // 7. Nút Tải lại (Refresh)
         document.getElementById('btnSideRefresh').addEventListener('click', () => {
             txtUserCode.value = '';
             txtPassword.value = '';
@@ -793,7 +756,6 @@
             setActiveInput(txtUserCode);
         });
 
-        // 8. Nút Nguồn (Power)
         document.getElementById('btnSidePower').addEventListener('click', () => {
             if (confirm('Khóa màn hình làm việc POS Ushi Mania?')) {
                 txtUserCode.value = '';
@@ -802,7 +764,6 @@
             }
         });
 
-        // 9. Modal tài khoản mẫu
         const sampleModal = document.getElementById('sampleAccountsModal');
         document.getElementById('btnSideBulb').addEventListener('click', () => {
             sampleModal.style.display = sampleModal.style.display === 'block' ? 'none' : 'block';
@@ -818,13 +779,11 @@
             setActiveInput(txtPassword);
         }
 
-        // 10. Xử lý hiển thị thông báo
         function showToast(msg, type) {
             loginToast.textContent = msg;
             loginToast.className = `hop-thong-bao-trang-thai ${type}`;
         }
 
-        // 11. Xử lý Đăng nhập qua Backend API -> Thành công chuyển về màn hình phân quyền tương ứng
         async function submitLogin() {
             const username = txtUserCode.value.trim();
             const password = txtPassword.value.trim();
@@ -881,7 +840,6 @@
 
         btnLogin.addEventListener('click', submitLogin);
 
-        // Hỗ trợ phím cứng Enter
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Enter') {
                 e.preventDefault();

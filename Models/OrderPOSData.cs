@@ -1,8 +1,5 @@
 namespace UshiMania.Models;
 
-/// <summary>
-/// Danh mục món ăn thực đơn
-/// </summary>
 public sealed class DanhMucThucDon
 {
     public int MaDanhMuc { get; set; }
@@ -10,9 +7,6 @@ public sealed class DanhMucThucDon
     public List<MonAnThucDon> MonAn { get; set; } = [];
 }
 
-/// <summary>
-/// Món ăn trong thực đơn
-/// </summary>
 public sealed class MonAnThucDon
 {
     public int MaMonAn { get; set; }
@@ -21,9 +15,6 @@ public sealed class MonAnThucDon
     public string? DuongDanAnh { get; set; }
 }
 
-/// <summary>
-/// Dòng chi tiết món trong đơn hàng POS
-/// </summary>
 public sealed class DongChiTietDonHang
 {
     public int MaChiTiet { get; set; }
@@ -34,9 +25,6 @@ public sealed class DongChiTietDonHang
     public string? GhiChuMon { get; set; }
 }
 
-/// <summary>
-/// Dữ liệu toàn bộ đơn hàng POS của bàn
-/// </summary>
 public sealed class DuLieuDonHangPOS
 {
     public int MaDonHang { get; set; }

@@ -20,7 +20,6 @@ namespace UshiMania.Controllers
             _authService = authService;
         }
 
-        // GET: / hoặc /Home/Index -> Điều hướng đến màn hình chính theo quyền hạn nhân viên
         [Authorize]
         [HttpGet]
         public IActionResult Index()
@@ -30,16 +29,13 @@ namespace UshiMania.Controllers
                 return RedirectToAction(nameof(ManHinhBep));
             }
 
-            // Quản lý, Phục vụ, Thu ngân mặc định vào Sơ đồ bàn
             return RedirectToAction(nameof(SoDoBan));
         }
 
-        // GET: /Home/DangNhap -> Giao diện POS Đăng nhập
         [AllowAnonymous]
         [HttpGet]
         public IActionResult DangNhap([FromQuery] string? returnUrl = null)
         {
-            // Nếu đã đăng nhập thì chuyển hướng thẳng đến trang được phép truy cập
             if (User.Identity != null && User.Identity.IsAuthenticated)
             {
                 if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
@@ -59,7 +55,6 @@ namespace UshiMania.Controllers
             return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
 
-        // POST: Xử lý Đăng nhập qua Form
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -90,7 +85,6 @@ namespace UshiMania.Controllers
             return Redirect(GetDefaultRedirectUrlForRole(user.Role));
         }
 
-        // POST: Xử lý Đăng nhập qua AJAX (Dành cho màn hình cảm ứng POS Kiosk)
         [AllowAnonymous]
         [HttpPost]
         public async Task<IActionResult> LoginApi([FromBody] LoginViewModel model)
@@ -125,7 +119,6 @@ namespace UshiMania.Controllers
             });
         }
 
-        // 1. Sơ đồ bàn: Quản lý, Phục vụ, Thu ngân
         [Authorize(Roles = "QUAN_LY,PHUC_VU,THU_NGAN")]
         [HttpGet]
         public IActionResult SoDoBan()
@@ -133,7 +126,6 @@ namespace UshiMania.Controllers
             return View();
         }
 
-        // 2. Order POS: Quản lý, Phục vụ, Thu ngân
         [Authorize(Roles = "QUAN_LY,PHUC_VU,THU_NGAN")]
         [HttpGet]
         public IActionResult OrderPOS()
@@ -141,7 +133,6 @@ namespace UshiMania.Controllers
             return View();
         }
 
-        // 3. Màn hình Bếp KDS: Quản lý, Bếp
         [Authorize(Roles = "QUAN_LY,BEP")]
         [HttpGet]
         public IActionResult ManHinhBep()
@@ -149,7 +140,6 @@ namespace UshiMania.Controllers
             return View();
         }
 
-        // 4. Kho & Báo cáo: Quản lý, Thu ngân, Bếp
         [Authorize(Roles = "QUAN_LY,THU_NGAN,BEP")]
         [HttpGet]
         public IActionResult KhoBaoCao()
@@ -157,7 +147,6 @@ namespace UshiMania.Controllers
             return View();
         }
 
-        // Khách gọi món qua QR (Khách hàng dùng, không yêu cầu nhân viên đăng nhập)
         [AllowAnonymous]
         [HttpGet]
         public IActionResult GuestOrder([FromQuery] int maBan)
@@ -170,7 +159,6 @@ namespace UshiMania.Controllers
             return View();
         }
 
-        // Đăng xuất khỏi hệ thống POS
         [Authorize]
         [HttpPost]
         [HttpGet]
@@ -181,7 +169,6 @@ namespace UshiMania.Controllers
             return RedirectToAction(nameof(DangNhap));
         }
 
-        // Trang thông báo không đủ quyền hạn truy cập
         [AllowAnonymous]
         [HttpGet]
         public IActionResult AccessDenied()
@@ -201,7 +188,6 @@ namespace UshiMania.Controllers
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
 
-        // Helper cấp phát Cookie xác thực kèm Role
         private async Task SignInUserAsync(UserAccount user)
         {
             var claims = new List<Claim>
@@ -227,7 +213,6 @@ namespace UshiMania.Controllers
                 authProperties);
         }
 
-        // Helper xác định trang mặc định theo vai trò nhân viên
         private string GetDefaultRedirectUrlForRole(string role)
         {
             return role switch

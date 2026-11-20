@@ -3,7 +3,6 @@ using UshiMania.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<UshiMania.DAL.DbHelper>();
@@ -14,10 +13,8 @@ builder.Services.AddScoped<UshiMania.BLL.OrderBLL>();
 builder.Services.AddScoped<UshiMania.DAL.HoaDonKhoDAL>();
 builder.Services.AddScoped<UshiMania.BLL.HoaDonKhoBLL>();
 
-// Đăng ký dịch vụ xác thực tài khoản Ushi Mania
 builder.Services.AddSingleton<IAuthService, AuthService>();
 
-// Cấu hình xác thực Cookie Authentication & Phân quyền Roles
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -39,7 +36,6 @@ builder.Services.AddSession(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -49,7 +45,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// Bật Middleware Session & Xác thực phân quyền
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
