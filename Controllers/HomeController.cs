@@ -20,18 +20,12 @@ namespace UshiMania.Controllers
             _authService = authService;
         }
 
-        // GET: / hoặc /Home/Index -> Điều hướng đến màn hình chính theo quyền hạn nhân viên
-        [Authorize]
+        // GET: / hoặc /Home/Index -> Hiển thị Trang chủ Index.cshtml bình thường
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult Index()
         {
-            if (User.IsInRole("BEP"))
-            {
-                return RedirectToAction(nameof(ManHinhBep));
-            }
-
-            // Quản lý, Phục vụ, Thu ngân mặc định vào Sơ đồ bàn
-            return RedirectToAction(nameof(SoDoBan));
+            return View();
         }
 
         // GET: /Home/DangNhap -> Giao diện POS Đăng nhập
