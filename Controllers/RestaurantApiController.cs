@@ -70,7 +70,9 @@ public sealed class RestaurantApiController : Controller
             return Json(new
             {
                 success = updated,
-                message = updated ? "Cập nhật trạng thái bàn thành công." : "Không tìm thấy bàn hoặc bàn chưa thể chuyển về trạng thái yêu cầu.",
+                message = updated
+                    ? "Cập nhật trạng thái bàn thành công."
+                    : "Không thể cập nhật: trạng thái không phù hợp với tình trạng đơn hàng của bàn hoặc không tìm thấy bàn.",
                 data = updated
             });
         }

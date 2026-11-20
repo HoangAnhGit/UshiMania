@@ -52,26 +52,71 @@ public sealed class BanAnDAL
 
     public bool ChangeStatus(int tableId, string status)
     {
-        const string sql = """
-            UPDATE ban_an
-            SET trang_thai = @trang_thai
-            WHERE ma_ban = @ma_ban
-              AND (@trang_thai <> N'TRONG' OR NOT EXISTS (
-                  SELECT 1
-                  FROM don_hang
-                  WHERE don_hang.ma_ban = ban_an.ma_ban
-                    AND don_hang.trang_thai_don = @trang_thai_don
-              ));
-            """;
-
         using var connection = dbHelper.CreateConnection();
         connection.Open();
-        using var command = dbHelper.CreateCommand(connection, sql);
-        command.Parameters.AddWithValue("@trang_thai", status);
-        command.Parameters.AddWithValue("@ma_ban", tableId);
-        command.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+        using var transaction = connection.BeginTransaction(IsolationLevel.Serializable);
 
-        return command.ExecuteNonQuery() == 1;
+        try
+        {
+            const string lockTableSql = """
+                SELECT ma_ban
+                FROM ban_an WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_ban = @ma_ban;
+                """;
+
+            using (var lockTableCommand = dbHelper.CreateCommand(connection, lockTableSql, transaction))
+            {
+                lockTableCommand.Parameters.AddWithValue("@ma_ban", tableId);
+                if (lockTableCommand.ExecuteScalar() is null)
+                {
+                    transaction.Rollback();
+                    return false;
+                }
+            }
+
+            const string hasOpenOrderSql = """
+                SELECT COUNT(1)
+                FROM don_hang WITH (UPDLOCK, HOLDLOCK)
+                WHERE ma_ban = @ma_ban
+                  AND trang_thai_don = @trang_thai_don;
+                """;
+
+            bool hasOpenOrder;
+            using (var hasOpenOrderCommand = dbHelper.CreateCommand(connection, hasOpenOrderSql, transaction))
+            {
+                hasOpenOrderCommand.Parameters.AddWithValue("@ma_ban", tableId);
+                hasOpenOrderCommand.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+                hasOpenOrder = Convert.ToInt32(hasOpenOrderCommand.ExecuteScalar()) > 0;
+            }
+
+            var validTransition = hasOpenOrder
+                ? status is "DANG_PHUC_VU" or "CHO_THANH_TOAN"
+                : status is "TRONG" or "DA_DAT";
+            if (!validTransition)
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            const string updateSql = """
+                UPDATE ban_an
+                SET trang_thai = @trang_thai
+                WHERE ma_ban = @ma_ban;
+                """;
+
+            using var updateCommand = dbHelper.CreateCommand(connection, updateSql, transaction);
+            updateCommand.Parameters.AddWithValue("@trang_thai", status);
+            updateCommand.Parameters.AddWithValue("@ma_ban", tableId);
+            var updated = updateCommand.ExecuteNonQuery() == 1;
+            transaction.Commit();
+            return updated;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+
     }
 
     public bool ChuyenBan(int maBanNguon, int maBanDich)
