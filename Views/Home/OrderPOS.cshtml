@@ -21,7 +21,11 @@
                 <div><span>Giờ mở</span><strong id="opened-at">--:--</strong></div>
                 <div><span>Tạm tính</span><strong id="subtotal-value">0</strong></div>
                 <div><span>Thuế VAT 8%</span><strong id="vat-value">0</strong></div>
-                <div><span>Giảm giá</span><strong id="discount-value">0</strong></div>
+                <div>
+                    <span>Giảm giá</span>
+                    <strong id="discount-value" style="color: #ffeb3b;">0 đ</strong>
+                    <small id="discount-label" style="display: none; font-size: 0.72rem; color: #fff; font-weight: 600;"></small>
+                </div>
                 <div class="ticket-total"><span>Thanh toán</span><strong id="grand-total">0</strong></div>
             </div>
         </header>
@@ -33,15 +37,11 @@
         <div id="order-lines" class="order-lines">
             <div class="order-empty">Chọn bàn để xem đơn hàng.</div>
         </div>
-        <div class="order-note-box">
-            <label for="dish-note">Ghi chú món đang chọn</label>
-            <textarea id="dish-note" maxlength="200" placeholder="Ví dụ: không hành, ít đá..."></textarea>
-        </div>
         <div class="order-left-actions">
             <button type="button" class="order-action-blue" id="transfer-table">Chuyển bàn</button>
             <button type="button" class="order-action-blue" id="merge-table">Gộp bàn</button>
             <button type="button" class="order-action-blue" id="discount-mode">Giảm giá</button>
-            <button type="button" class="order-action-blue" id="note-focus">Ghi chú</button>
+            <button type="button" class="order-action-purple" id="note-focus"><i class="bi bi-pencil-square"></i> Ghi chú</button>
         </div>
     </section>
 
@@ -151,6 +151,159 @@
     </div>
 </div>
 
+<!-- Modal Ghi chú món ăn -->
+<div id="note-modal" class="pos-overlay" hidden>
+    <div class="modal-dialog-card">
+        <header class="modal-dialog-header">
+            <h3><i class="bi bi-pencil-square"></i> Ghi chú món ăn</h3>
+            <button type="button" class="modal-dialog-close" data-close-note>&times;</button>
+        </header>
+        <div class="modal-dialog-body">
+            <div class="modal-field">
+                <label id="note-dish-name" style="font-weight: 700; color: #0d6efd; font-size: 0.95rem; margin-bottom: 8px; display: block;"></label>
+                <textarea id="modal-dish-note" class="form-control" rows="3" maxlength="200" placeholder="Ví dụ: không hành, ít đá, mang về..."></textarea>
+            </div>
+            <div class="quick-note-tags">
+                <button type="button" class="btn-quick-note" data-tag="Không hành">Không hành</button>
+                <button type="button" class="btn-quick-note" data-tag="Ít đá">Ít đá</button>
+                <button type="button" class="btn-quick-note" data-tag="Không đá">Không đá</button>
+                <button type="button" class="btn-quick-note" data-tag="Ít cay">Ít cay</button>
+                <button type="button" class="btn-quick-note" data-tag="Không cay">Không cay</button>
+                <button type="button" class="btn-quick-note" data-tag="Làm nóng">Làm nóng</button>
+                <button type="button" class="btn-quick-note" data-tag="Nấu kỹ">Nấu kỹ</button>
+                <button type="button" class="btn-quick-note" data-tag="Mang về">Mang về</button>
+            </div>
+        </div>
+        <footer class="modal-dialog-footer">
+            <button type="button" class="btn btn-secondary btn-sm" data-close-note>Hủy</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-save-dish-note">Lưu ghi chú</button>
+        </footer>
+    </div>
+</div>
+
+<!-- Modal Chọn mã giảm giá -->
+<div id="discount-modal" class="pos-overlay" hidden>
+    <div class="modal-dialog-card discount-modal-card">
+        <header class="modal-dialog-header discount-modal-header">
+            <h3><i class="bi bi-tag-fill"></i> Chọn mã &amp; mức giảm giá</h3>
+            <button type="button" class="modal-dialog-close" data-close-discount>&times;</button>
+        </header>
+        <div class="modal-dialog-body discount-modal-body">
+            <div class="discount-subtotal-info">
+                <span>Tạm tính tiền món:</span>
+                <strong id="modal-subtotal-preview">0 đ</strong>
+            </div>
+
+            <label class="discount-section-title">Chương trình khuyến mãi áp dụng:</label>
+            <div class="discount-preset-list">
+                <button type="button" class="discount-preset-item active" data-type="percent" data-val="10" data-label="10% Đặt bàn trước">
+                    <div class="preset-icon"><i class="bi bi-calendar-check"></i></div>
+                    <div class="preset-info">
+                        <strong>Giảm 10% - Đặt bàn trước</strong>
+                        <small>Khách đặt bàn trước qua Hotline / Website</small>
+                    </div>
+                    <div class="preset-badge" id="badge-calc-10">-0 đ</div>
+                </button>
+
+                <button type="button" class="discount-preset-item" data-type="percent" data-val="15" data-label="15% Sinh nhật">
+                    <div class="preset-icon"><i class="bi bi-gift-fill"></i></div>
+                    <div class="preset-info">
+                        <strong>Giảm 15% - Sinh nhật</strong>
+                        <small>Áp dụng cho khách có ngày sinh trong tháng</small>
+                    </div>
+                    <div class="preset-badge" id="badge-calc-15">-0 đ</div>
+                </button>
+
+                <button type="button" class="discount-preset-item" data-type="percent" data-val="5" data-label="5% Thành viên">
+                    <div class="preset-icon"><i class="bi bi-star-fill"></i></div>
+                    <div class="preset-info">
+                        <strong>Giảm 5% - Thành viên Ushi</strong>
+                        <small>Dành cho khách hàng thân thiết</small>
+                    </div>
+                    <div class="preset-badge" id="badge-calc-5">-0 đ</div>
+                </button>
+
+                <button type="button" class="discount-preset-item" data-type="percent" data-val="20" data-label="20% Ưu đãi đặc biệt">
+                    <div class="preset-icon"><i class="bi bi-fire"></i></div>
+                    <div class="preset-info">
+                        <strong>Giảm 20% - Khai trương / Ưu đãi đặc biệt</strong>
+                        <small>Voucher sự kiện hoặc đối tác</small>
+                    </div>
+                    <div class="preset-badge" id="badge-calc-20">-0 đ</div>
+                </button>
+            </div>
+
+            <div class="discount-custom-section">
+                <label class="discount-section-title">Hoặc nhập mức giảm tùy chỉnh:</label>
+                <div class="discount-custom-row">
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Theo %</span>
+                        <input type="number" id="input-custom-percent" class="form-control" min="0" max="100" placeholder="VD: 10" />
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">Số tiền</span>
+                        <input type="number" id="input-custom-amount" class="form-control" min="0" step="1000" placeholder="VD: 50000" />
+                        <span class="input-group-text">đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="discount-preview-summary">
+                <div><span>Mức giảm:</span> <strong id="preview-discount-val" style="color: #d32f2f;">0 đ</strong></div>
+                <div><span>Khách cần trả (sau VAT):</span> <strong id="preview-payable-val" style="color: #2e7d32; font-size: 1.05rem;">0 đ</strong></div>
+            </div>
+        </div>
+        <footer class="modal-dialog-footer discount-modal-footer">
+            <button type="button" class="btn btn-outline-danger btn-sm" id="btn-remove-discount">Hủy giảm giá</button>
+            <button type="button" class="btn btn-secondary btn-sm" data-close-discount>Đóng</button>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-apply-discount">Áp dụng giảm giá</button>
+        </footer>
+    </div>
+</div>
+
+<!-- Modal Thanh toán VietQR -->
+<div id="vietqr-modal" class="pos-overlay" hidden>
+    <div class="modal-dialog-card vietqr-modal-card">
+        <header class="modal-dialog-header vietqr-header">
+            <h3><i class="bi bi-qr-code-scan"></i> Chuyển khoản VietQR</h3>
+            <button type="button" class="modal-dialog-close" data-close-vietqr>&times;</button>
+        </header>
+        <div class="modal-dialog-body vietqr-body">
+            <div class="vietqr-subtitle" id="vqr-subtitle">Ushi Mania · Bàn S01 · Đơn #3</div>
+            
+            <div class="vietqr-img-wrapper">
+                <img id="modal-vietqr-image" src="/images/vietqr-payment.png" alt="Mã VietQR" class="vietqr-img" />
+            </div>
+
+            <div class="vietqr-receipt-box">
+                <div class="vqr-row">
+                    <span>Tạm tính:</span>
+                    <strong id="vqr-subtotal">0 đ</strong>
+                </div>
+                <div class="vqr-row">
+                    <span>VAT 8%:</span>
+                    <strong id="vqr-vat">0 đ</strong>
+                </div>
+                <div class="vqr-row">
+                    <span>Giảm giá:</span>
+                    <strong id="vqr-discount">0 đ</strong>
+                </div>
+                <div class="vqr-total-label">Tổng cần nhận:</div>
+                <div class="vqr-total-amount" id="vqr-total">0 đ</div>
+                <div class="vqr-words" id="vqr-words">Bằng chữ: không đồng</div>
+                <div class="vqr-memo" id="vqr-memo">Ushi Mania | Bàn S01 | Thanh toán sau VAT 8%: 0 VND</div>
+            </div>
+        </div>
+        <footer class="vietqr-footer">
+            <button type="button" class="btn btn-outline-secondary btn-vqr-back" data-close-vietqr>Quay lại</button>
+            <button type="button" class="btn btn-success btn-vqr-confirm" id="btn-confirm-vietqr-pay">
+                <i class="bi bi-check2-circle"></i> Xác nhận đã nhận chuyển khoản
+            </button>
+        </footer>
+    </div>
+</div>
+
 <div id="receipt-overlay" class="pos-overlay" hidden>
     <section class="receipt-card">
         <button type="button" class="overlay-close" data-close-overlay>&times;</button>
@@ -167,9 +320,9 @@
         $(function () {
             const root = $('#order-pos');
             const qrConfig = {
-                bankId: root.attr('data-bank-id') || '',
-                accountNumber: root.attr('data-account-number') || '',
-                accountName: root.attr('data-account-name') || ''
+                bankId: root.attr('data-bank-id') || 'MB',
+                accountNumber: root.attr('data-account-number') || '0388888888',
+                accountName: root.attr('data-account-name') || 'USHI MANIA'
             };
             let tables = [];
             let categories = [];
@@ -183,6 +336,7 @@
 
             let quantity = '1';
             let discount = 0;
+            let discountLabel = '';
             let entryMode = 'quantity';
             let paymentMethod = null;
             let toastTimer;
@@ -219,7 +373,12 @@
             function updateTotals() {
                 $('#subtotal-value').text(formatMoney(subtotal()));
                 $('#vat-value').text(formatMoney(vat()));
-                $('#discount-value').text(formatMoney(discount));
+                $('#discount-value').text(discount > 0 ? `-${formatMoney(discount)}` : '0 đ');
+                if (discount > 0 && discountLabel) {
+                    $('#discount-label').text(`(${discountLabel})`).show();
+                } else {
+                    $('#discount-label').hide();
+                }
                 $('#grand-total').text(formatMoney(payable()));
             }
 
@@ -260,7 +419,7 @@
 
                     const bottomRow = $('<div class="order-line-bottom">');
                     if (note) {
-                        bottomRow.append($('<em class="order-line-note">').text(note));
+                        bottomRow.append($('<em class="order-line-note">').text(`[Ghi chú: ${note}]`));
                     } else {
                         bottomRow.append($('<span>'));
                     }
@@ -283,13 +442,19 @@
                                 e.stopPropagation();
                                 updateSavedItemQuantity(detailId, qty + 1);
                             });
+                        const btnNote = $('<button type="button" class="btn-note-pos" title="Ghi chú món">&#9998;</button>')
+                            .on('click', function (e) {
+                                e.stopPropagation();
+                                activeSelection = { type: 'saved', item: { maChiTiet: detailId, tenMonAn: name, soLuong: qty, donGia: price, ghiChuMon: note, isChoNau } };
+                                openNoteModal(activeSelection.item);
+                            });
                         const btnDel = $('<button type="button" class="btn-del-pos" title="Xóa món">&times;</button>')
                             .on('click', function (e) {
                                 e.stopPropagation();
                                 deleteSavedItem(detailId, name);
                             });
 
-                        controls.append(btnMinus, qtySpan, btnPlus, btnDel);
+                        controls.append(btnMinus, qtySpan, btnPlus, btnNote, btnDel);
                     } else {
                         // Đang nấu hoặc đã xong -> Không cho xóa
                         controls.append($('<span class="qty-display-pos" style="color: #6c757d;">').text(`x${qty}`));
@@ -300,12 +465,11 @@
                     row.append(topRow, bottomRow);
 
                     row.on('click', function () {
-                        activeSelection = { type: 'saved', item: { maChiTiet: detailId, tenMonAn: name, soLuong: qty, donGia: price, isChoNau } };
+                        activeSelection = { type: 'saved', item: { maChiTiet: detailId, tenMonAn: name, soLuong: qty, donGia: price, ghiChuMon: note, isChoNau } };
                         quantity = String(qty);
                         setEntryMode('quantity');
                         $('#selected-quantity').text(quantity);
                         $('#selected-menu-item').text(`${name} (Đã gửi bếp)`);
-                        $('#dish-note').val(note || '');
                         renderLines();
                     });
 
@@ -325,7 +489,7 @@
 
                     const bottomRow = $('<div class="order-line-bottom">');
                     if (draft.ghiChuMon) {
-                        bottomRow.append($('<em class="order-line-note">').text(draft.ghiChuMon));
+                        bottomRow.append($('<em class="order-line-note">').text(`[Ghi chú: ${draft.ghiChuMon}]`));
                     } else {
                         bottomRow.append($('<span>'));
                     }
@@ -353,6 +517,12 @@
                             renderLines();
                             updateTotals();
                         });
+                    const btnNote = $('<button type="button" class="btn-note-pos" title="Ghi chú món">&#9998;</button>')
+                        .on('click', function (e) {
+                            e.stopPropagation();
+                            activeSelection = { type: 'draft', index: idx, item: draft };
+                            openNoteModal(draft);
+                        });
                     const btnDel = $('<button type="button" class="btn-del-pos" title="Xóa món chưa gửi">&times;</button>')
                         .on('click', function (e) {
                             e.stopPropagation();
@@ -365,7 +535,7 @@
                             updateTotals();
                         });
 
-                    controls.append(btnMinus, qtySpan, btnPlus, btnDel);
+                    controls.append(btnMinus, qtySpan, btnPlus, btnNote, btnDel);
                     bottomRow.append(controls);
                     row.append(topRow, bottomRow);
 
@@ -375,7 +545,6 @@
                         setEntryMode('quantity');
                         $('#selected-quantity').text(quantity);
                         $('#selected-menu-item').text(`${draft.tenMonAn} (Chưa gửi bếp)`);
-                        $('#dish-note').val(draft.ghiChuMon || '');
                         renderLines();
                     });
 
@@ -513,7 +682,6 @@
                             setEntryMode('quantity');
                             $('#selected-quantity').text(quantity);
                             $('#selected-menu-item').text(`${name} (x${quantity})`);
-                            $('#dish-note').val(activeSelection.item.ghiChuMon || '');
 
                             renderLines();
                             updateTotals();
@@ -582,7 +750,9 @@
                 draftItems = [];
                 activeSelection = null;
                 discount = 0;
+                discountLabel = '';
                 quantity = '1';
+                paymentMethod = null;
                 setEntryMode('quantity');
 
                 $('#order-table-select').val('');
@@ -590,9 +760,11 @@
                 $('#current-order-label').text('Chưa chọn bàn');
                 $('#selected-menu-item').text('Chưa chọn món');
                 $('#selected-quantity').text('1');
-                $('#dish-note').val('');
+                $('#discount-label').hide();
 
                 $('#payment-panel').prop('hidden', true);
+                $('#vietqr-modal').prop('hidden', true);
+                $('#discount-modal').prop('hidden', true);
                 $('#category-grid, #menu-grid').prop('hidden', false);
                 $('#back-to-menu').prop('hidden', true);
 
@@ -643,23 +815,91 @@
                 }).fail(xhr => notify(xhr.responseJSON?.message || 'Không thể gửi món cho bếp.', true));
             }
 
-            function buildVietQr() {
-                if (!qrConfig.bankId || !qrConfig.accountNumber) {
-                    $('#vietqr-box').prop('hidden', true);
-                    $('#payment-hint').text('Chưa cấu hình tài khoản ngân hàng trong appsettings.json.');
+            function docSoTienThanhChu(soTien) {
+                soTien = Math.round(Number(soTien || 0));
+                if (soTien === 0) return 'không đồng';
+                if (soTien < 0) return 'âm ' + docSoTienThanhChu(Math.abs(soTien));
+
+                const chuSo = ['không', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+
+                function docBlock3(n, full) {
+                    let tram = Math.floor(n / 100);
+                    let chuc = Math.floor((n % 100) / 10);
+                    let donVi = n % 10;
+                    let ketQua = '';
+
+                    if (tram > 0 || full) {
+                        ketQua += chuSo[tram] + ' trăm ';
+                    }
+
+                    if (chuc > 1) {
+                        ketQua += chuSo[chuc] + ' mươi ';
+                        if (donVi === 1) ketQua += 'mốt ';
+                        else if (donVi === 5) ketQua += 'lăm ';
+                        else if (donVi > 0) ketQua += chuSo[donVi] + ' ';
+                    } else if (chuc === 1) {
+                        ketQua += 'mười ';
+                        if (donVi === 5) ketQua += 'lăm ';
+                        else if (donVi > 0) ketQua += chuSo[donVi] + ' ';
+                    } else if (donVi > 0) {
+                        if (tram > 0 || full) ketQua += 'lẻ ';
+                        ketQua += chuSo[donVi] + ' ';
+                    }
+
+                    return ketQua.trim();
+                }
+
+                const donViTien = ['', 'nghìn', 'triệu', 'tỷ', 'nghìn tỷ', 'triệu tỷ'];
+                let str = String(soTien);
+                let blocks = [];
+                while (str.length > 0) {
+                    blocks.unshift(parseInt(str.slice(-3), 10));
+                    str = str.slice(0, -3);
+                }
+
+                let result = '';
+                for (let i = 0; i < blocks.length; i++) {
+                    let blockVal = blocks[i];
+                    if (blockVal > 0) {
+                        let doc = docBlock3(blockVal, i > 0);
+                        let viTri = blocks.length - 1 - i;
+                        let dv = donViTien[viTri];
+                        result += (result ? ' ' : '') + doc + (dv ? ' ' + dv : '');
+                    }
+                }
+
+                return (result + ' đồng').trim();
+            }
+
+            function openVietQrModal() {
+                if (!orderId() || !subtotal()) {
+                    notify('Cần có đơn hàng và món ăn trước khi thanh toán.', true);
                     return;
                 }
                 const order = orderId();
-                const params = new URLSearchParams({
-                    amount: String(Math.round(payable())),
-                    addInfo: `USHI ORDER ${order}`,
-                    accountName: qrConfig.accountName
-                });
-                const imageUrl = `https://img.vietqr.io/image/${encodeURIComponent(qrConfig.bankId)}-${encodeURIComponent(qrConfig.accountNumber)}-compact2.png?${params}`;
-                $('#vietqr-image').attr('src', imageUrl);
-                $('#vietqr-caption').text(`Đơn #${order} - ${formatMoney(payable())}`);
-                $('#vietqr-box').prop('hidden', false);
-                $('#payment-hint').text('Quét mã QR để thanh toán, sau đó nhấn xác nhận.');
+                const tableId = selectedTableId();
+                const currentTable = tables.find(t => Number(readValue(t, 'maBan', 'MaBan')) === tableId);
+                const tableNum = currentTable ? readValue(currentTable, 'soHieuBan', 'SoHieuBan') : ($('#order-table-select option:selected').text().split(' - ')[0] || `Bàn ${tableId}`);
+
+                const sub = subtotal();
+                const v = vat();
+                const disc = discount;
+                const total = payable();
+                const totalInt = Math.round(total);
+
+                $('#vqr-subtitle').text(`Ushi Mania · Bàn ${tableNum} · Đơn #${order}`);
+                $('#vqr-subtotal').text(formatMoney(sub));
+                $('#vqr-vat').text(formatMoney(v));
+                $('#vqr-discount').text(formatMoney(disc));
+                $('#vqr-total').text(formatMoney(total));
+                $('#vqr-words').text(`Bằng chữ: ${docSoTienThanhChu(totalInt)}`);
+
+                const memo = `Ushi Mania | Bàn ${tableNum} | Thanh toán sau VAT 8%: ${totalInt} VND`;
+                $('#vqr-memo').text(memo);
+
+                $('#modal-vietqr-image').attr('src', '/images/vietqr-payment.png');
+
+                $('#vietqr-modal').prop('hidden', false);
             }
 
             function showPayment() {
@@ -685,10 +925,14 @@
                     notify('Vui lòng chọn phương thức thanh toán.', true);
                     return;
                 }
-                if (paymentMethod === 'VIETQR' && (!qrConfig.bankId || !qrConfig.accountNumber)) {
-                    notify('Chưa cấu hình thông tin ngân hàng VietQR.', true);
+                if (paymentMethod === 'VIETQR') {
+                    openVietQrModal();
                     return;
                 }
+                executePayment(paymentMethod);
+            }
+
+            function executePayment(method) {
                 $.ajax({
                     url: '/api/restaurant/payments',
                     method: 'POST',
@@ -696,7 +940,7 @@
                     dataType: 'json',
                     data: JSON.stringify({
                         maDonHang: orderId(),
-                        hinhThucTra: paymentMethod,
+                        hinhThucTra: method,
                         tienGiamGia: discount
                     })
                 }).done(response => {
@@ -704,7 +948,8 @@
                         notify(response?.message || 'Thanh toán thất bại.', true);
                         return;
                     }
-                    notify('Thanh toán và hoàn tất đơn hàng thành công!');
+                    $('#vietqr-modal').prop('hidden', true);
+                    notify('Thanh toán thành công! Bàn đã trở về trạng thái trống.');
                     resetToDefaultScreen();
                 }).fail(xhr => notify(xhr.responseJSON?.message || 'Thanh toán thất bại.', true));
             }
@@ -729,9 +974,18 @@
                 content.append($('<hr>'));
                 content.append($('<div class="receipt-line">').text(`Tạm tính: ${formatMoney(subtotal())}`));
                 content.append($('<div class="receipt-line">').text(`Thuế VAT 8%: ${formatMoney(vat())}`));
-                content.append($('<div class="receipt-line">').text(`Giảm giá: ${formatMoney(discount)}`));
+                content.append($('<div class="receipt-line">').text(`Giảm giá: ${discount > 0 ? '-' + formatMoney(discount) : '0 đ'}${discountLabel ? ' (' + discountLabel + ')' : ''}`));
                 content.append($('<strong class="receipt-total">').text(`Tổng thanh toán: ${formatMoney(payable())}`));
                 $('#receipt-overlay').prop('hidden', false);
+            }
+
+            function openNoteModal(item) {
+                if (!item) return;
+                const dishName = item.tenMonAn || 'Món đang chọn';
+                $('#note-dish-name').text(`Món: ${dishName}`);
+                $('#modal-dish-note').val(item.ghiChuMon || '');
+                $('#note-modal').prop('hidden', false);
+                setTimeout(() => $('#modal-dish-note').focus(), 100);
             }
 
             $('#order-table-select').on('change', function () {
@@ -739,16 +993,65 @@
                 draftItems = [];
                 activeSelection = null;
                 discount = 0;
-                $('#dish-note').val('');
+                discountLabel = '';
+                $('#discount-label').hide();
+                $('#discount-modal').prop('hidden', true);
                 $('#selected-menu-item').text('Chưa chọn món');
                 refreshOrder();
             });
 
-            $('#dish-note').on('input', function () {
-                const val = $(this).val();
-                if (activeSelection?.type === 'draft') {
-                    draftItems[activeSelection.index].ghiChuMon = val;
+            // Xử lý Modal Ghi chú món ăn
+            $('.btn-quick-note').on('click', function () {
+                const tag = $(this).data('tag');
+                const input = $('#modal-dish-note');
+                const current = input.val().trim();
+                if (!current) {
+                    input.val(tag);
+                } else if (!current.includes(tag)) {
+                    input.val(current + ', ' + tag);
+                }
+                input.focus();
+            });
+
+            $('[data-close-note]').on('click', () => $('#note-modal').prop('hidden', true));
+            $('#note-modal').on('click', function (e) {
+                if (e.target === this) {
+                    $(this).prop('hidden', true);
+                }
+            });
+
+            $('#btn-save-dish-note').on('click', function () {
+                const newNote = $('#modal-dish-note').val().trim();
+                if (!activeSelection) {
+                    $('#note-modal').prop('hidden', true);
+                    return;
+                }
+
+                if (activeSelection.type === 'draft') {
+                    const item = draftItems[activeSelection.index];
+                    if (item) {
+                        item.ghiChuMon = newNote;
+                    }
+                    $('#note-modal').prop('hidden', true);
+                    notify('Đã cập nhật ghi chú món.');
                     renderLines();
+                } else if (activeSelection.type === 'saved') {
+                    const detailId = activeSelection.item.maChiTiet;
+                    $.ajax({
+                        url: `/api/restaurant/orders/items/${detailId}/note`,
+                        method: 'PUT',
+                        contentType: 'application/json; charset=utf-8',
+                        dataType: 'json',
+                        data: JSON.stringify({ maChiTiet: detailId, ghiChu: newNote })
+                    }).done(response => {
+                        if (!response?.success) {
+                            notify(response?.message || 'Cập nhật ghi chú thất bại.', true);
+                            return;
+                        }
+                        $('#note-modal').prop('hidden', true);
+                        notify('Đã cập nhật ghi chú món thành công!');
+                        refreshOrder();
+                    }).fail(xhr => notify(xhr.responseJSON?.message || 'Cập nhật ghi chú thất bại.', true));
                 }
             });
 
@@ -769,12 +1072,148 @@
                 }
             });
 
-            $('#discount-mode').on('click', function () {
-                setEntryMode('discount');
-                quantity = String(discount || '');
-                $('#selected-quantity').text(quantity || '0');
-                notify('Nhập số tiền giảm giá, sau đó bấm dấu kiểm xanh.');
+            // --- XỬ LÝ MODAL GIẢM GIÁ (10% Đặt bàn trước, 15% Sinh nhật...) ---
+            let tempDiscountType = 'percent';
+            let tempDiscountVal = 10;
+            let tempDiscountLabel = '10% Đặt bàn trước';
+
+            function calculateDiscountAmount(sub, type, val) {
+                if (type === 'percent') {
+                    return Math.round(sub * (Number(val) / 100));
+                }
+                return Math.min(sub, Math.max(0, Math.round(Number(val || 0))));
+            }
+
+            function updateDiscountModalPreview() {
+                const sub = subtotal();
+                let discAmount = 0;
+
+                const customPercent = $('#input-custom-percent').val();
+                const customAmount = $('#input-custom-amount').val();
+
+                if (customPercent !== '' && customPercent !== undefined && Number(customPercent) >= 0) {
+                    discAmount = calculateDiscountAmount(sub, 'percent', customPercent);
+                    tempDiscountType = 'percent';
+                    tempDiscountVal = Number(customPercent);
+                    tempDiscountLabel = `Giảm ${customPercent}%`;
+                } else if (customAmount !== '' && customAmount !== undefined && Number(customAmount) >= 0) {
+                    discAmount = calculateDiscountAmount(sub, 'amount', customAmount);
+                    tempDiscountType = 'amount';
+                    tempDiscountVal = Number(customAmount);
+                    tempDiscountLabel = `Giảm ${formatMoney(discAmount)}`;
+                } else {
+                    discAmount = calculateDiscountAmount(sub, tempDiscountType, tempDiscountVal);
+                }
+
+                discAmount = Math.min(sub, Math.max(0, discAmount));
+                const afterSub = Math.max(0, sub - discAmount);
+                const vatAmount = Math.round(afterSub * 0.08);
+                const payAmount = afterSub + vatAmount;
+
+                $('#preview-discount-val').text(`-${formatMoney(discAmount)}`);
+                $('#preview-payable-val').text(formatMoney(payAmount));
+            }
+
+            function openDiscountModal() {
+                const sub = subtotal();
+                if (!selectedTableId() || sub <= 0) {
+                    notify('Vui lòng chọn bàn và có món ăn trước khi áp dụng giảm giá.', true);
+                    return;
+                }
+
+                $('#modal-subtotal-preview').text(formatMoney(sub));
+
+                // Cập nhật các badge số tiền theo subtotal hiện tại
+                $('#badge-calc-10').text(`-${formatMoney(Math.round(sub * 0.10))}`);
+                $('#badge-calc-15').text(`-${formatMoney(Math.round(sub * 0.15))}`);
+                $('#badge-calc-5').text(`-${formatMoney(Math.round(sub * 0.05))}`);
+                $('#badge-calc-20').text(`-${formatMoney(Math.round(sub * 0.20))}`);
+
+                // Reset custom inputs
+                $('#input-custom-percent').val('');
+                $('#input-custom-amount').val('');
+
+                // Mặc định chọn 10% đặt bàn trước nếu chưa chọn gì
+                if (!discountLabel) {
+                    tempDiscountType = 'percent';
+                    tempDiscountVal = 10;
+                    tempDiscountLabel = '10% Đặt bàn trước';
+                }
+
+                $('.discount-preset-item').removeClass('active');
+                $(`.discount-preset-item[data-label="${tempDiscountLabel}"]`).addClass('active');
+
+                updateDiscountModalPreview();
+                $('#discount-modal').prop('hidden', false);
+            }
+
+            $('.discount-preset-item').on('click', function () {
+                $('.discount-preset-item').removeClass('active');
+                $(this).addClass('active');
+                $('#input-custom-percent').val('');
+                $('#input-custom-amount').val('');
+
+                tempDiscountType = $(this).data('type');
+                tempDiscountVal = Number($(this).data('val'));
+                tempDiscountLabel = $(this).data('label');
+
+                updateDiscountModalPreview();
             });
+
+            $('#input-custom-percent').on('input', function () {
+                if ($(this).val() !== '') {
+                    $('.discount-preset-item').removeClass('active');
+                    $('#input-custom-amount').val('');
+                    updateDiscountModalPreview();
+                }
+            });
+
+            $('#input-custom-amount').on('input', function () {
+                if ($(this).val() !== '') {
+                    $('.discount-preset-item').removeClass('active');
+                    $('#input-custom-percent').val('');
+                    updateDiscountModalPreview();
+                }
+            });
+
+            $('#btn-apply-discount').on('click', function () {
+                const sub = subtotal();
+                const customPercent = $('#input-custom-percent').val();
+                const customAmount = $('#input-custom-amount').val();
+
+                if (customPercent !== '' && Number(customPercent) >= 0) {
+                    const pct = Math.min(100, Math.max(0, Number(customPercent)));
+                    discount = Math.round(sub * (pct / 100));
+                    discountLabel = `Giảm ${pct}%`;
+                } else if (customAmount !== '' && Number(customAmount) >= 0) {
+                    discount = Math.min(sub, Math.max(0, Number(customAmount)));
+                    discountLabel = `Giảm ${formatMoney(discount)}`;
+                } else {
+                    discount = calculateDiscountAmount(sub, tempDiscountType, tempDiscountVal);
+                    discountLabel = tempDiscountLabel;
+                }
+
+                updateTotals();
+                $('#discount-modal').prop('hidden', true);
+                notify(`Đã áp dụng ${discountLabel} (-${formatMoney(discount)})`);
+            });
+
+            $('#btn-remove-discount').on('click', function () {
+                discount = 0;
+                discountLabel = '';
+                updateTotals();
+                $('#discount-modal').prop('hidden', true);
+                notify('Đã hủy giảm giá.');
+            });
+
+            $('[data-close-discount]').on('click', () => $('#discount-modal').prop('hidden', true));
+            $('#discount-modal').on('click', function (e) {
+                if (e.target === this) {
+                    $(this).prop('hidden', true);
+                }
+            });
+
+            $('#discount-mode').on('click', openDiscountModal);
 
             $('#confirm-selection').on('click', function () {
                 if (!$('#payment-panel').prop('hidden')) {
@@ -806,11 +1245,58 @@
                 setEntryMode('quantity');
                 $('#selected-quantity').text(quantity);
                 $('#selected-menu-item').text('Chưa chọn món');
-                $('#dish-note').val('');
                 renderLines();
             });
 
-            $('#note-focus').on('click', () => $('#dish-note').trigger('focus'));
+            $('#note-focus').on('click', function () {
+                if (activeSelection) {
+                    const item = activeSelection.type === 'draft' ? draftItems[activeSelection.index] : activeSelection.item;
+                    openNoteModal(item);
+                    return;
+                }
+
+                // Nếu chưa chọn dòng nào nhưng trong đơn có đúng 1 món draft
+                if (draftItems.length === 1 && (!currentOrder || !(readValue(currentOrder, 'chiTiet', 'ChiTiet')?.length))) {
+                    activeSelection = { type: 'draft', index: 0, item: draftItems[0] };
+                    openNoteModal(draftItems[0]);
+                    renderLines();
+                    return;
+                }
+
+                // Nếu trong đơn có đúng 1 món đã lưu
+                const savedLines = readValue(currentOrder, 'chiTiet', 'ChiTiet') || [];
+                if (draftItems.length === 0 && savedLines.length === 1) {
+                    const line = savedLines[0];
+                    const detailId = readValue(line, 'maChiTiet', 'MaChiTiet');
+                    const name = readValue(line, 'tenMonAn', 'TenMonAn');
+                    const qty = Number(readValue(line, 'soLuong', 'SoLuong') || 1);
+                    const price = Number(readValue(line, 'donGia', 'DonGia') || 0);
+                    const note = readValue(line, 'ghiChuMon', 'GhiChuMon');
+                    const kitchenStatus = String(readValue(line, 'tienDoBep', 'TienDoBep') || 'CHO_NAU').toUpperCase();
+
+                    activeSelection = {
+                        type: 'saved',
+                        item: {
+                            maChiTiet: detailId,
+                            tenMonAn: name,
+                            soLuong: qty,
+                            donGia: price,
+                            ghiChuMon: note,
+                            isChoNau: kitchenStatus === 'CHO_NAU'
+                        }
+                    };
+                    openNoteModal(activeSelection.item);
+                    renderLines();
+                    return;
+                }
+
+                // Nếu có nhiều món hoặc chưa chọn
+                if (draftItems.length > 0 || savedLines.length > 0) {
+                    notify('Vui lòng bấm chọn một món ăn trên danh sách trước để thêm ghi chú.', true);
+                } else {
+                    notify('Chưa có món ăn nào để ghi chú. Vui lòng chọn món trước.', true);
+                }
+            });
             $('#send-order').on('click', sendDraftOrderToKitchen);
             $('#subtotal-preview').on('click', showReceipt);
             $('#open-payment').on('click', showPayment);
@@ -825,10 +1311,45 @@
                 paymentMethod = $(this).data('method');
                 $('.payment-method').removeClass('active');
                 $(this).addClass('active');
-                if (paymentMethod === 'VIETQR') buildVietQr();
-                else {
-                    $('#vietqr-box').prop('hidden', true);
+                if (paymentMethod === 'VIETQR') {
+                    openVietQrModal();
+                } else {
                     $('#payment-hint').text('Nhấn dấu kiểm xanh để hoàn tất thanh toán.');
+                }
+            });
+
+            $('#btn-confirm-vietqr-pay').on('click', function () {
+                const btn = $(this);
+                btn.prop('disabled', true).text('Đang xử lý...');
+                $.ajax({
+                    url: '/api/restaurant/payments',
+                    method: 'POST',
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    data: JSON.stringify({
+                        maDonHang: orderId(),
+                        hinhThucTra: 'VIETQR',
+                        tienGiamGia: discount
+                    })
+                }).done(response => {
+                    btn.prop('disabled', false).html('<i class="bi bi-check2-circle"></i> Xác nhận đã nhận chuyển khoản');
+                    if (!response?.success) {
+                        notify(response?.message || 'Thanh toán thất bại.', true);
+                        return;
+                    }
+                    $('#vietqr-modal').prop('hidden', true);
+                    notify('Thanh toán thành công! Bàn đã trở về trạng thái trống.');
+                    resetToDefaultScreen();
+                }).fail(xhr => {
+                    btn.prop('disabled', false).html('<i class="bi bi-check2-circle"></i> Xác nhận đã nhận chuyển khoản');
+                    notify(xhr.responseJSON?.message || 'Thanh toán thất bại.', true);
+                });
+            });
+
+            $('[data-close-vietqr]').on('click', () => $('#vietqr-modal').prop('hidden', true));
+            $('#vietqr-modal').on('click', function (e) {
+                if (e.target === this) {
+                    $(this).prop('hidden', true);
                 }
             });
 

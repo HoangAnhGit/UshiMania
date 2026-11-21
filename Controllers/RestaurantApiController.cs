@@ -226,6 +226,39 @@ public sealed class RestaurantApiController : Controller
         }
     }
 
+    [HttpPut("orders/items/{maChiTiet:int}/note")]
+    public async Task<IActionResult> CapNhatGhiChuMon([FromRoute] int maChiTiet, [FromBody] CapNhatGhiChuChiTietRequest? request)
+    {
+        try
+        {
+            var result = orderBLL.UpdateItemNote(maChiTiet, request?.GhiChuMon);
+            if (result)
+            {
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "order-updated",
+                    detailId = maChiTiet
+                });
+                await restaurantHub.Clients.All.SendAsync("ReceiveDataUpdate", new
+                {
+                    type = "kitchen-progress",
+                    detailId = maChiTiet
+                });
+            }
+
+            return Json(new
+            {
+                success = result,
+                message = result ? "Cập nhật ghi chú món thành công." : "Không thể cập nhật: món đã được bếp chế biến hoặc đơn không còn mở.",
+                data = result
+            });
+        }
+        catch (Exception exception)
+        {
+            return HandleError(exception, nameof(CapNhatGhiChuMon));
+        }
+    }
+
     [HttpPost("orders")]
     public async Task<IActionResult> TaoHoacCapNhatOrder([FromBody] TaoHoacCapNhatOrderRequest? request)
     {

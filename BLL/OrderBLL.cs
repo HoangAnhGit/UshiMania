@@ -146,4 +146,19 @@ public sealed class OrderBLL
 
         return orderDAL.UpdateItemQuantity(detailId, newQuantity);
     }
+
+    public bool UpdateItemNote(int detailId, string? note)
+    {
+        if (detailId <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(detailId), "Order detail ID must be positive.");
+        }
+
+        if (note?.Length > 200)
+        {
+            throw new ArgumentException("Dish note cannot exceed 200 characters.", nameof(note));
+        }
+
+        return orderDAL.UpdateItemNote(detailId, note);
+    }
 }

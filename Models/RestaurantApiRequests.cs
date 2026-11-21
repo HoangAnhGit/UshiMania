@@ -47,3 +47,9 @@ public sealed class CapNhatSoLuongChiTietRequest
     public int MaChiTiet { get; set; }
     public int SoLuong { get; set; }
 }
+
+public sealed class CapNhatGhiChuChiTietRequest
+{
+    public int MaChiTiet { get; set; }
+    public string? GhiChuMon { get; set; }
+}

@@ -608,4 +608,43 @@ public sealed class OrderDAL
             throw;
         }
     }
+
+    public bool UpdateItemNote(int detailId, string? note)
+    {
+        using var connection = dbHelper.CreateConnection();
+        connection.Open();
+        using var transaction = connection.BeginTransaction(IsolationLevel.Serializable);
+        try
+        {
+            const string sql = """
+                UPDATE ct
+                SET ghi_chu_mon = @ghi_chu_mon
+                FROM chi_tiet_don_hang AS ct
+                INNER JOIN don_hang AS d ON d.ma_don_hang = ct.ma_don_hang
+                WHERE ct.ma_chi_tiet = @ma_chi_tiet
+                  AND d.trang_thai_don = @trang_thai_don
+                  AND COALESCE(ct.tien_do_bep, 'CHO_NAU') = 'CHO_NAU';
+                """;
+
+            using var command = dbHelper.CreateCommand(connection, sql, transaction);
+            command.Parameters.AddWithValue("@ghi_chu_mon", (object?)note ?? DBNull.Value);
+            command.Parameters.AddWithValue("@ma_chi_tiet", detailId);
+            command.Parameters.AddWithValue("@trang_thai_don", OPEN_ORDER_STATUS);
+
+            var updated = command.ExecuteNonQuery() == 1;
+            if (!updated)
+            {
+                transaction.Rollback();
+                return false;
+            }
+
+            transaction.Commit();
+            return true;
+        }
+        catch
+        {
+            transaction.Rollback();
+            throw;
+        }
+    }
 }
